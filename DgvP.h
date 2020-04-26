@@ -1,9 +1,9 @@
-#define ParmRxTOut  31250
-#define ParmTxTOut  31250
-#define Lnk_Count 2
+#define ParmRxTOut  (2Xms)
+#define ParmTxTOut  (5Xms)
+#define Lnk_Count 1
 //------------------------------------------------------------------------------
 #define Osi2         0
-#define Osi2_Start   1
+//#define Osi2_Start   1
 #define Osi2_Ctrl    2
 #define Osi2_IdS     3
 #define Osi2_IdT     4
@@ -12,8 +12,9 @@
 #define Osi2_Len     7
 #define Osi2_Datos   8
 #define Osi3         10
-#define Osi3_Chk_Crc 10
-#define Osi3_Chk_ID  11
+#define Osi3_Chk_Crc 11
+#define Osi3_Chk_ID  12
+#define Osi2_Len2    13
 #define Procces      20
 //------------------------------------------------------------------------------
 #define pdgv_Preambulo  0x7E
@@ -32,7 +33,7 @@
 #define CmpSkT    4
 #define CmpLen    5
 #define CmpDat    6
-#define MaxLen    120
+#define MaxLen    127
 #define LINKS     4
 //------------------------------------------------------------------------------
 #define CMD_RESET       0
@@ -52,22 +53,24 @@
 #define CMD_XBIT_EE     14
 #define CMD_INC_EE      15
 #define CMD_DEC_EE      16
+//------------------------
 #define CMD_SEND_Tsk    17
 #define CMD_IF_EQ_RAM   18
 #define CMD_IF_MA_RAM   19
-#define CMD_CPY_R2R     20
-#define CMD_CPY_R2E     21
-#define CMD_CPY_E2R     22
-#define CMD_CPY_E2E     23
-#define CMD_IF_EQ_EE    24
-#define CMD_IF_MA_EE    25
-
+//------------------------
+#define CMD_CPY_R2R     22
+#define CMD_CPY_R2E     23
+#define CMD_CPY_E2R     24
+#define CMD_CPY_E2E     25
+#define CMD_IF_EQ_EE    26
+#define CMD_IF_MA_EE    27
+//------------------------
 #define CMD_Dom_OmOff   64
 #define CMD_Bind_Stps   65
+//------------------------
 #define CMD_CONFIRM_TCP 82
 #define CMD_Err_Trg_Fnc 83 //El Target no tiene el comando/funcion implementado
-
-#define CMD_RUN_PkTSKs	252
+#define CMD_RUN_Sch     252
 #define CMD_RUN_RgTSK   253
 #define CMD_RUN_2TSK    254
 //------------------------------------------------------------------------------
@@ -108,12 +111,23 @@ unsigned char IFIDLIST(unsigned char IDT);
 unsigned char CalChs(unsigned char* ptr);
          int8 InstTask(unsigned char Task);
 //------------------------------------------------------------------------------
-         void Pdgv_Osi2(char Data,unsigned int ori);
+         void Pdgv_Osi2(char Data,unsigned char ori);
 unsigned char Pdgv_Osi3(DgvSck *Sck);
          void Pdgv_Osi4(DgvSck *Sck);
          void Pdgv_Osi5(DgvSck *Sck);
          void Pdgv_AddCrc(DgvSck *Sck);
          void Pdgv_TxPk(DgvSck *Sck);
-         void Pdgv_TxStsMch(DgvSck *Sck);
+         void Pdgv_TxStsMch(DgvSck *Sck,unsigned char ori);
 //------------------------------------------------------------------------------
+#if((PCB&6)==6)
+#define DgvTxBy(x)
+#define DgvTxFlush()
+#define DgvRxByNoLock(x)
+#define DgvRxByLock()
+#else
+#define DgvTxBy(x)    fputc(x,lnk1);rchr=fgetc(lnk1);if(x!=rchr){SetRed(LED2);}tchr=x
+#define DgvTxFlush()
+#define DgvRxByNoLock(x)   while(kbhit(lnk1)!=0)x=fgetc(lnk1)
+#define DgvRxByLock()   fgetc(lnk1)
+#endif
 

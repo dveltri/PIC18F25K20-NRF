@@ -1,5 +1,7 @@
 //#include <18F14K22.h>
 #include <18F25K20.h>
+   //pcb 1 (1.6) pcb 2 (1,2)
+#define PCB 2  //1 2 6
 #include "eeprom.h"
 #include "Libdgv.h"
 #include "DgvH.h"
@@ -13,11 +15,14 @@ TS_DGV_OS iGP;
 DgvSck iSck;
 TS_PDGV *pdgv;
 //------------------------
+unsigned char iRBsts=0;
 unsigned char RBsts=0;
+unsigned int16 Htim0=0;
 //------------------------
 #INT_TIMER0
 void Tmr0_fnc(void) //RTC for TimeOuts
 {
+   Htim0++;
    clear_interrupt(INT_TIMER0);
 } 
 
@@ -36,25 +41,33 @@ void Tmr2_fnc(void)
 }
 
 #INT_TIMER3
-void Tmr3_fnc(void) //Diming control
+void Tmr3_fnc(void) //Virtual TMR control
 {
+   TS_Tmrs *pTmrs;
+   unsigned int8 Tmp8;
    Set_timer3(25500);
-/*   if(pTmrs->OverFlowEv!=0)
+   pTmrs=&iGP.Tmrs[0];
+   for(Tmp8=0;Tmp8<Tmrs_Count;Tmp8++)
    {
-      if(pTmrs->TmpCount1==0)
+      if(pTmrs->OverFlowEv!=0)
       {
-         pTmrs->TmpCount1=pTmrs->Prescale;
-         if(pTmrs->TmpCount2==0)
+         if(pTmrs->TmpCount1==0)
          {
-            InstTask(pTmrs->OverFlowEv);
+            pTmrs->TmpCount1=pTmrs->Prescale;
+            if(pTmrs->TmpCount2==0)
+            {
+               InstTask(pTmrs->OverFlowEv);
+            }
+            pTmrs->TmpCount2++;
          }
-         pTmrs->TmpCount2++;
+         pTmrs->TmpCount1--;
       }
-      pTmrs->TmpCount1--;
+      pTmrs++;
+      /*if(pTmrs>&iGP.Tmrs[Tmrs_Count-1])
+         pTmrs=&iGP.Tmrs[0];
+      // */
    }
-   pTmrs++;
-   if(pTmrs>&iGP.Tmrs[Tmrs_Count-1])
-      pTmrs=&iGP.Tmrs[0];*/
+   clear_interrupt(INT_TIMER3);
 } 
 
 #INT_EXT
@@ -63,22 +76,37 @@ void IntExt(void)
    ext_int_edge(0,L_TO_H);
    clear_interrupt(INT_EXT);
    INT0IF = FALSE;
-    enable_interrupts(INT_EXT);
+   enable_interrupts(INT_EXT);
 }
 
 #INT_RB
-void SerialRx2(void) 
+void ChangePortBH(void) 
 {
-   unsigned char iRBsts=0;
+   clear_interrupt(INT_RB);
    iRBsts=PORTB;
    RBsts=iRBsts;
-   clear_interrupt(INT_RB);
+}
+
+#int_rda
+void SerialRx1(void) 
+{
+   //Pdgv_Osi2(fgetc(lnk1),0);
+   clear_interrupt(INT_RDA);
 }
 
 #INT_AD
 void AnalogIn(void) 
 {
-   iGP.IOs[iGP.AdChl].Value=read_adc(ADC_READ_ONLY);
+   uint16 ValAD=0;
+   clear_interrupt(INT_AD);
+   ValAD=read_adc(ADC_READ_ONLY);
+   iGP.IOs[iGP.AdChl].Value=ValAD;
+   /*iGP.AdChl++;
+   if(iGP.AdChl>=4)
+      iGP.AdChl=3;
+   set_adc_channel(iGP.AdChl);
+   delay_us(20);// */
+   read_adc(ADC_START_ONLY);
 }
 
 void main(void)
@@ -103,11 +131,12 @@ void main(void)
    unsigned int16 IOsts =0;   // Global temp var 16bit
    restart_wdt();
    //--------------------------------------------------------------------------- Init Hws, Interrupts, Drvs, Structs
+   if(True)
    {
       SET_TRIS_A(0xFF);//0xE0
       PORTA =  0;
       
-      ANSELH = 0x00;
+      ANSELH = 0x10;
       PORTB =  0;
       SET_TRIS_B(0xFF);
       WPUB=0xFF;
@@ -123,10 +152,13 @@ void main(void)
       //--------------------------------
       bit_clear(INTCON2,0);
       //--------------------------------
-      ANSEL  = 0x80;//setup_adc_ports(RC3_RC6_ANALOG);
-      ANSELH = 0x01; 
+      //setup_adc_ports(RC3_RC6_ANALOG);
+      //ANSEL  = 0x0F;
+      //ANSELH = 0x01;
+      //port_b_pullups(TRUE);
    }
    //--------------------------------------------------------------------------- Clear and SetUp HW
+   if(True)
    {
       clear_interrupt(INT_EXT);
       clear_interrupt(INT_RDA);
@@ -137,10 +169,12 @@ void main(void)
       clear_interrupt(INT_TIMER2);
       clear_interrupt(INT_TIMER3);
       //--------------------------------
-      setup_adc(ADC_CLOCK_INTERNAL);
+      setup_adc_ports(sAN12 | VSS_VDD);
+      setup_adc(ADC_CLOCK_DIV_64);
+      ADCON1=0;
       setup_timer_0(RTCC_INTERNAL|RTCC_DIV_256);      // RTCC_DIV_2, RTCC_DIV_4, RTCC_DIV_8, RTCC_DIV_16,RTCC_DIV_32,RTCC_DIV_64,RTCC_DIV_128,RTCC_DIV_256
       setup_timer_1(T1_INTERNAL|T1_DIV_BY_1);         // T1_DIV_1, T1_DIV_2, T1_DIV_4, T1_DIV_8
-      //setup_timer_2(T2_DIV_BY_16,0,1);                // T2_DIV_1, T2_DIV_2, T2_DIV_4, T2_DIV_8, T2_DIV_16
+      setup_timer_2(T2_DIV_BY_1,0,1);                 // T2_DIV_1, T2_DIV_4, T2_DIV_8, T2_DIV_16
       setup_timer_3(T3_INTERNAL|T3_DIV_BY_1);         // T3_DIV_1, T3_DIV_2, T3_DIV_4, T3_DIV_8
       //setup_comparator(NC_NC_NC_NC);                  // This device COMP currently not supported by the PICWizard
       restart_wdt();
@@ -151,6 +185,7 @@ void main(void)
       input(LED3);
    }
    //--------------------------------------------------------------------------- Init Structures
+   if(True)
    {
       restart_wdt();
       initUsart();
@@ -183,33 +218,86 @@ void main(void)
          Tmp16>>=1;
          IOsts>>=1;
       }
-      //-------------------------------- 
-      restart_wdt();
-      //--------------------------------  Inicializacion de Logical Timers
+      restart_wdt();// */
+      //--------------------------------  Inicializacion de Virtual Timers
       pTmrs=&iGP.Tmrs[0];
       for(Tmp8=0;Tmp8<Tmrs_Count;Tmp8++)
       {
-         pTmrs->Prescale=read_EEPROM(TIMER1_Ps+(Tmp8<<1));
+         pTmrs->Prescale=read_eeprom(TIMER1_Ps+(Tmp8<<1));
          pTmrs->TmpCount1=pTmrs->Prescale;
          pTmrs->TmpCount2=pTmrs->Prescale;
-         pTmrs->OverFlowEv=read_EEPROM(TIMER1_Ev+(Tmp8<<1));
-         //pTmrs->Iterations=read_EEPROM(ITERATIONS+(Tmp8<<1));
+         pTmrs->OverFlowEv=read_eeprom(TIMER1_Ev+(Tmp8<<1));
+         //pTmrs->Iterations=read_eeprom(ITERATIONS+(Tmp8<<1));
          pTmrs++;
       }
-      restart_wdt();
+      restart_wdt();// */
       //--------------------------------  Inicializacion de Servicios
       iGP.Srv[Hw_Tmrs].ConstTime=429;
       iGP.Srv[Hw_Read_INP].ConstTime=63;
       iGP.Srv[Hw_Procc_INP].ConstTime=1953;//3906;//(125*31,25);
+      //iGP.Srv[Hw_Blind1].ConstTime=244;
+      //iGP.Srv[Hw_Blind2].ConstTime=244;
       iGP.Srv[Hw_ADC].ConstTime=31250;
       //--------------------------------*/
+      /*Tmp8=read_EEPROM(Win1Time);
+      if(Tmp8!=0)
+      {
+         iGP.Srv[Hw_Blind1].ConstTime*=Tmp8;
+         Idx=read_EEPROM(Win1Lvl);
+         if((Idx&128)==0)
+         {
+            Idx&=127;
+            iGP.IOs[Out_BLIN1].Value=Idx;
+            iGP.IOs[Out_BLIN1].HigLvl=(127^Idx);
+         }
+         iGP.IOs[Out_BLIN1].Flags|=IO_Flg_Sts; //este flag indica que la salida esta siendo utilisada por un modulo superior
+         iGP.IOs[Out_BLIN1+1].Flags|=IO_Flg_Sts; //este flag indica que la salida esta siendo utilisada por un modulo superior
+      }
+      else
+         iGP.Srv[Hw_Blind1].ConstTime=0;
+      restart_wdt();
+      //--------------------------------
+      Tmp8=read_EEPROM(Win2Time);
+      if(Tmp8!=0)
+      {
+         iGP.Srv[Hw_Blind2].ConstTime*=Tmp8;
+         Idx=read_EEPROM(Win2Lvl);
+         if((Idx&128)==0)
+         {
+            Idx&=127;
+            iGP.IOs[Out_BLIN2].Value=Idx;
+            iGP.IOs[Out_BLIN2].HigLvl=(127^Idx);
+         }
+         iGP.IOs[Out_BLIN2].Flags|=IO_Flg_Sts; //este flag indica que la salida esta siendo utilisada por un modulo superior
+         iGP.IOs[Out_BLIN2+1].Flags|=IO_Flg_Sts; //este flag indica que la salida esta siendo utilisada por un modulo superior
+      }
+      else
+         iGP.Srv[Hw_Blind2].ConstTime=0;
+      restart_wdt(); // */
    }
    //--------------------------------------------------------------------------- Start Interrups
+   if(True)
    {
-      iGP.AdChl=0;
-      set_adc_channel(7);
-      delay_us(20);
-      read_adc(ADC_START_ONLY);
+      //enable_interrupts(INT_RDA);
+      //enable_interrupts(INT_AD);
+      //enable_interrupts(INT_RA);
+      //enable_interrupts(INT_RB);
+      //enable_interrupts(INT_TIMER0);
+      //enable_interrupts(INT_TIMER1);
+      //enable_interrupts(INT_TIMER2);
+      //enable_interrupts(INT_TIMER3);
+      RBIE=TRUE;   // On Change int Enable  (BUG al querer usar INT_RA..setea TODO IOCB en lugar de solo RABIE. DECLARADO MANUALMENTE
+      RBIF=FALSE;    // On Change int Flag 
+      INTCON|=0x08;
+      INTCON&=~0x01;
+      IOCB=0xF0;     // individual pin on change interrup enable
+      //enable_interrupts(INT_EXT);
+      enable_interrupts(GLOBAL); 
+      //--------------------------------
+   }
+   //--------------------------------------------------------------------------- Init Process
+   if(True)
+   {
       restart_wdt();
       //--------------------------------
       switch ( restart_cause() )
@@ -219,22 +307,49 @@ void main(void)
            Error(Er_WDT);
          }
       }
-      //--------------------------------
-      //enable_interrupts(INT_RDA);
-      //enable_interrupts(INT_AD);
-      //enable_interrupts(INT_RA);
-      //enable_interrupts(INT_RB);
-      //enable_interrupts(INT_TIMER0);
-      //enable_interrupts(INT_TIMER1);
-      //enable_interrupts(INT_TIMER2);
-      //enable_interrupts(INT_TIMER3);
-      RBIE=TRUE;               //BUG al querer usar INT_RA..setea TODO IOCB en lugar de solo RABIE. DECLARADO MANUALMENTE
-      INTCON|=0x08;
-      INTCON&=~0x01;
-      IOCB=0xF0;
-      enable_interrupts(GLOBAL); 
-      //--------------------------------
    }
+   //--------------------------------*/
+   if(True)
+   {
+      T2CKPS0=0;
+      T2CKPS1=0;
+      T2OUTPS0=0;
+      T2OUTPS1=0;
+      T2OUTPS2=0;
+      T2OUTPS3=0;
+      TMR20N=1;
+      PR2=70;
+      restart_wdt();
+      //-----------------
+      SetOff(LED1);
+      SetOff(LED2);
+      SetOff(LED3);
+      ANSELH = 0x10;
+      PORTB=0xFF;
+      LATB=0xFF;
+      IOCB=0xFF;
+      TRISB=0x3F;
+      WPUB=0xFF;
+      RBPU=0;
+      //setup_adc_ports(RB0_ANALOG);
+      set_adc_channel( 12 );
+      delay_us(25);
+      read_adc(ADC_START_ONLY);
+      //-----------------------------
+      //---------
+      ADCON2=0x2F;
+      ADCON1=0x00;
+      ANSELH=0x10;
+      ADCON0=0x31;
+      ADCON0|=0x02;
+      CHS0=0;
+      CHS1=0;
+      CHS2=1;
+      CHS3=1;
+      ADFM=0;
+      ADON=1;
+   }
+   //-----------------------------
    InstTask(read_EEPROM(Start_Ev));
    //--------------------------------------------------------------------------- */
    while(true)
@@ -242,10 +357,11 @@ void main(void)
       countReadin++;
       restart_wdt();
       //======================================================================== Dgv Protocolo v1
+      if(True)
       {
          while(kbhit(lnk1)!=0)
          {
-            Pdgv_Osi2(fgetc(lnk1),(lnk1-1));
+            Pdgv_Osi2(DgvRxByLock(),(lnk1-1));
          }// */
          /*while(kbhit(lnk2)!=0)
          {
@@ -258,7 +374,7 @@ void main(void)
             {
                if(Pdgv_Osi3(Sck))
                {
-                  SetOff(LED1);
+                  SetOff(LED2);
                   Pdgv_Osi4(Sck);
                   Pdgv_Osi5(Sck);
                }
@@ -269,8 +385,7 @@ void main(void)
                }
                Sck->RxTOut=0;
                Sck->RxSts=Osi2;
-               SetOff(LED1);
-               SetOff(LED1);
+               SetOff(LED2);
             }
             else
             {
@@ -281,13 +396,13 @@ void main(void)
                      dgvFree(Sck->RxPk);
                      Sck->RxPk=0;
                   }
-                  SetOff(LED1);
+                  SetOff(LED2);
                   Error(Er_TimOut);
                   Sck->RxSts=Osi2;
                   Sck->RxTOut=0;
                }
             }
-            Pdgv_TxStsMch(Sck);
+            Pdgv_TxStsMch(Sck,Idx);
          }
       }
       restart_wdt();
@@ -333,7 +448,7 @@ void main(void)
                                  if(pIOs->Value < 255)
                                     pIOs->Value++;
                                  if((pIOs->Flags&7)==IO_Flg_Typ_InD)
-                                    pIOs->LstVal=pIOs->Value;
+                                    pIOs->LValue=pIOs->Value;
                               }
                               else
                               {
@@ -358,11 +473,11 @@ void main(void)
                         {
                            case IO_Flg_Typ_In:
                            {
-                              Tmp8b=AbsDiff8(pIOs->LstVal,pIOs->Value);
+                              Tmp8b=AbsDiff8(pIOs->LValue,pIOs->Value);
                               if(Tmp8b>15)
                               {
                                  Tmp8b=pIOs->Value;
-                                 if(pIOs->LstVal<Tmp8b)
+                                 if(pIOs->LValue<Tmp8b)
                                  {
                                     if((pIOs->Flags&IO_Flg_LSts)==0)
                                     {
@@ -380,7 +495,7 @@ void main(void)
                                        InstTask(pIOs->LowEvt);
                                     }
                                  }
-                                 pIOs->LstVal=Tmp8b;
+                                 pIOs->LValue=Tmp8b;
                               }
                            }
                            break;
@@ -399,12 +514,12 @@ void main(void)
                               }
                               else
                               {
-                                 pIOs->LstVal-=pIOs->Value;
-                                 if((pIOs->LstVal>10) && (pIOs->LstVal<200))        //Event Short Press
+                                 pIOs->LValue-=pIOs->Value;
+                                 if((pIOs->LValue>10) && (pIOs->LValue<200))        //Event Short Press
                                  {
                                     InstTask(pIOs->LowEvt);
                                  }
-                                 pIOs->LstVal=0;
+                                 pIOs->LValue=0;
                               }
                            }
                            break;
@@ -491,7 +606,7 @@ void main(void)
             }
          }
          input(LED1);
-         Pdgv_TxStsMch(&iSck);
+         Pdgv_TxStsMch(&iSck,Idx);
       }
       restart_wdt();
       //======================================================================== Driver Hw Outputs
@@ -505,8 +620,8 @@ void main(void)
                case IO_Flg_Typ_Out:                   //tipo de salida On/Off
                {
                   if((pIOs->Flags&IO_Flg_Sts)==0)
-                     pIOs->LstVal=pIOs->Value;
-                  if((pIOs->LstVal)!=0)
+                     pIOs->LValue=pIOs->Value;
+                  if((pIOs->LValue)!=0)
                   {
                      SetOutput(Tmp8,1);
                   }
@@ -525,7 +640,7 @@ void main(void)
    }
 }
 
-unsigned short GetInputs(void)
+unsigned int16 GetInputs(void)
 {
    unsigned short sts=0;
    sts|=input_state(GPIO00)<<0;
@@ -567,7 +682,7 @@ void SetOutput(unsigned char Out,unsigned char value)
    if(Out==15)output_bit(GPIO15,value);
 }
 
-#if (DgvTask!=0)
+#if(DgvTask!=0)
 int8 InstTask(unsigned char Task)
 {
    char Idx=0;

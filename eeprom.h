@@ -1,20 +1,23 @@
+void write_eeprom(unsigned char address, unsigned char data);
+unsigned char read_eeprom(unsigned char address);
+
 //==================================================================EEPROM
-#define CTRINIe         0x00
-#define STSe            0x01
-#define Kdgv_Ctrl       0x02
-#define Kdgv_IdS        0x03
-#define IDOe            0x04
-#define IDOeI           0x05
-#define IDOeG1          0x06
-#define IDOeG2          0x07
-#define IDOeG3          0x08
-#define IDOeG4          0x09
-#define IDOeG5          0x0A
-#define IDOeBC          0x0B
-#define LNK_0_Speed     0x0C
-#define LNK_0_MAT       0x0D  //cantidad de re transmiciones
-#define LNK_0_TO        0x0E  //time out wait response
-#define Start_Ev        0x0F
+#define CTRINIe          0x00
+#define STSe             0x01
+#define Kdgv_Ctrl        0x02
+#define Kdgv_IdS         0x03
+#define IDOe             0x04
+#define IDOeI            0x05
+#define IDOeG1           0x06
+#define IDOeG2           0x07
+#define IDOeG3           0x08
+#define IDOeG4           0x09
+#define IDOeG5           0x0A
+#define IDOeBC           0x0B
+#define LNK_0_Speed      0x0C
+#define LNK_0_MAT        0x0D  //cantidad de re transmiciones
+#define LNK_0_TO         0x0E  //time out wait response
+#define Start_Ev         0x0F
 //-----------------------Error Codes
 #define Er_TimOut        0x10
 #define Er_Ctrl          0x11
@@ -80,15 +83,15 @@
 #define TIMER6_Ps        0x4B
 #define TIMER6_Ev        0x4C
 //--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=
-//#define Win1Time         0x49
-//#define Win1Lvl          0x4A
-//#define Win2Lvl          0x4B
-//#define Win2Time         0x4C
+//#define Win1Time       0x49
+//#define Win1Lvl        0x4A
+//#define Win2Lvl        0x4B
+//#define Win2Time       0x4C
 #define Win1Time         0x4D
 #define Win1Lvl          0x4E
 #define Win2Time         0x4F
 #define Win2Lvl          0x50
-//#define In_Neg            0x51
+//#define In_Neg         0x51
 //--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=
 #define LsEventos        0x52
 #define Task58           0x52
@@ -97,6 +100,7 @@
 #define Task55           0x5B
 #define Task54           0x5E
 #define Task53           0x61
+#define Task52           0x64
 //_,-,_,-,_,-,_,-,_,-,_,-,_,-,_,-,_,-,_,-,_,-,_,-,_,-,_,-,_//
 #define Task1            0xFD
 #define Task1d1          0xFE

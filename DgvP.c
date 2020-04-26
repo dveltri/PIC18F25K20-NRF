@@ -5,14 +5,15 @@ void InitDgvP(void)
 {
    unsigned char tmp0=0;
    pdgv=dgvMalloc(sizeof(TS_PDGV));
-   memset(pdgv,0,sizeof(TS_PDGV));
-   tmp0=read_EEPROM(CTRINIe);
-   write_EEPROM(CTRINIe,(tmp0+1));
+   memset((void *)pdgv,0,sizeof(TS_PDGV));
+   tmp0=read_eeprom(CTRINIe);
+   write_eeprom(CTRINIe,(tmp0+1));
    delay_ms(5);
    for(tmp0=0;tmp0<8;tmp0++)
    {
-      pdgv->ID[tmp0]=read_EEPROM(IDOe+tmp0);
+      pdgv->ID[tmp0]=read_eeprom(IDOe+tmp0);
    }
+   //pdgv->ID[1]=IDhw;
    tmp0=pdgv->ID[1];
    while(tmp0--)
    {
@@ -31,7 +32,7 @@ unsigned char IFIDLIST(unsigned char IDT)
       if(IDT==pdgv->ID[tmp0])
          return tmp0;
       tmp0++;
-   }
+   }// */
    return 0;
 }
 
@@ -75,7 +76,6 @@ void Pdgv_AddCrc(DgvSck *Sck)
    }
 }
 
-#define DgvTxBy(x)    fputc(x,lnk1);rchr=fgetc(lnk1);if(x!=rchr){SetRed(LED1);}tchr=x
 void Pdgv_TxPk(DgvSck *Sck)
 {
    unsigned char* ptr;
@@ -85,11 +85,10 @@ void Pdgv_TxPk(DgvSck *Sck)
    unsigned char rchr;
    if(Sck->TxPk==0)
     return;
-   while(kbhit(lnk1)!=0)
-     lnk=fgetc(lnk1);
+   DgvRxByNoLock(lnk);
    ptr=(unsigned char*)Sck->TxPk;
    //disable_interrupts(GLOBAL);
-   SetGreen(LED1);
+   SetGreen(LED2);
    DgvTxBy(0x7E);
    DgvTxBy(Sck->TxPk->Ctrl);
    DgvTxBy(Sck->TxPk->IdS);
@@ -104,11 +103,11 @@ void Pdgv_TxPk(DgvSck *Sck)
       DgvTxBy(*ptr);
       ptr++;
    }
-   SetOff(LED1);
+   SetOff(LED2);
    //enable_interrupts(GLOBAL); 
 }
 
-void Pdgv_TxStsMch(DgvSck *Sck)
+void Pdgv_TxStsMch(DgvSck *Sck,unsigned char ori)
 {
    if(Sck->TxPk!=0)
    {
@@ -135,31 +134,31 @@ void Pdgv_Osi2(char Data,unsigned char ori)
    DgvSck *Sck;
    if(ori>=Lnk_Count)
       return;
-    disable_interrupts(GLOBAL); 
+    //disable_interrupts(GLOBAL); 
     pdgv->LTRx=GetRtc();
     Sck=&pdgv->Sck[ori];
    if(Sck->RxSts>=Osi3)
    {
-      enable_interrupts(GLOBAL); 
+      //enable_interrupts(GLOBAL); 
       return;
    }
    //---------------------------------------------------------------------------
    switch(Sck->RxSts)
    {
       case Osi2:
-         SetOff(LED1);
+         SetOff(LED2);
          if(Data!=pdgv_Preambulo)
             break;
          Sck->RxTOut=GetRtc();
          Sck->RxSts=Osi2_Ctrl;
-         SetGreen(LED1);
+         SetGreen(LED2);
       break;
       case Osi2_Ctrl:
          if((0XEB&Data)!=0)
          {
             Sck->RxSts=Osi2;
             Sck->RxTOut=0;
-            SetOff(LED1);
+            SetOff(LED2);
             Error(Er_Ctrl);
             break;
          }
@@ -187,7 +186,7 @@ void Pdgv_Osi2(char Data,unsigned char ori)
          {
             Sck->RxSts=Osi2;
             Sck->RxTOut=0;
-            SetOff(LED1);
+            SetOff(LED2);
             Error(Er_Len);
             break;
          }
@@ -196,7 +195,7 @@ void Pdgv_Osi2(char Data,unsigned char ori)
          {
             Sck->RxSts=Osi2;
             Sck->RxTOut=0;
-            SetOff(LED1);
+            SetOff(LED2);
             Error(Er_Rx_Mlc);
             break;
          }
@@ -218,7 +217,7 @@ void Pdgv_Osi2(char Data,unsigned char ori)
          }
       break;
    }
-   enable_interrupts(GLOBAL);
+   //enable_interrupts(GLOBAL);
    return;
 }
 
@@ -272,7 +271,7 @@ void Pdgv_Osi4(DgvSck *Sck)
    if(Sck->TxPk==0)
       return;
    Mk_Response(Sck);
-   Sck->TxPk->Ctrl=(pdgv_UDP | pdgv_Chs);
+   Sck->TxPk->Ctrl=(pdgv_UDP);
    Sck->TxPk->SckT='R';
    Sck->TxPk->Len=0;
    Pdgv_AddCrc(Sck);
@@ -298,18 +297,17 @@ void Pdgv_Osi5(DgvSck *Sck)
       case CMD_RESET:
       {
          reset_cpu();
-      }
+      }// */
       break;
       case CMD_CHG_ID:
       {
          write_eeprom(IDOeI,Sck->RxPk->Data[0]);
          pdgv->ID[1]=Sck->RxPk->Data[0];
-      }
+      }// */
       break;
       //-----------------------
       case CMD_PING:
       {
-         //ShwMem();
          Len=(sizeof(Version)-1);
          Sck->TxPk=dgvMalloc(Len+7);
          if(Sck->TxPk==0)break;
@@ -327,7 +325,7 @@ void Pdgv_Osi5(DgvSck *Sck)
          ptr=&Sck->RxPk->Data[1];
          while(Len--)
          {
-            write_EEPROM(Tmp0,*ptr);
+            write_eeprom(Tmp0,*ptr);
             Tmp0++;
             ptr++;
          }
@@ -346,7 +344,7 @@ void Pdgv_Osi5(DgvSck *Sck)
             ptr=&Sck->TxPk->Data[0];
             while(Len--)
             {
-               *ptr=read_EEPROM(Tmp0);
+               *ptr=read_eeprom(Tmp0);
                Tmp0++;
                ptr++;
             }
@@ -357,7 +355,7 @@ void Pdgv_Osi5(DgvSck *Sck)
             if(Sck->TxPk==0)break;
             Mk_Response(Sck);
             Sck->TxPk->Len=1;
-            Sck->TxPk->Data[0]=read_EEPROM(Sck->RxPk->Data[0]);
+            Sck->TxPk->Data[0]=read_eeprom(Sck->RxPk->Data[0]);
          }
       }
       break;
@@ -437,7 +435,7 @@ void Pdgv_Osi5(DgvSck *Sck)
          ptr=&Sck->RxPk->Data[1];
          while(Len--)
          {
-            Tmp0=read_EEPROM(Tmp1);
+            Tmp0=read_eeprom(Tmp1);
             if(cmd==CMD_SBIT_EE)
                Tmp0|=*ptr;
             if(cmd==CMD_CBIT_EE)
@@ -448,7 +446,7 @@ void Pdgv_Osi5(DgvSck *Sck)
                Tmp0+=*ptr;
             if(cmd==CMD_DEC_EE)
                Tmp0-=*ptr;
-            write_EEPROM(Tmp1,Tmp0);
+            write_eeprom(Tmp1,Tmp0);
             Tmp1++;
             ptr++;
          }
@@ -464,10 +462,10 @@ void Pdgv_Osi5(DgvSck *Sck)
          Mk_Response(Sck);
          Sck->TxPk->IdT=Sck->RxPk->Data[0];          //target
          Sck->TxPk->SckS='R';
-         Sck->TxPk->SckT=read_EEPROM(Tmp0);
+         Sck->TxPk->SckT=read_eeprom(Tmp0);
          Sck->TxPk->Len=2;
-         Sck->TxPk->Data[0]=read_EEPROM(Tmp0+1);
-         Sck->TxPk->Data[1]=read_EEPROM(Tmp0+2);
+         Sck->TxPk->Data[0]=read_eeprom(Tmp0+1);
+         Sck->TxPk->Data[1]=read_eeprom(Tmp0+2);
       }
       break;
       //------------------------
@@ -514,31 +512,34 @@ void Pdgv_Osi5(DgvSck *Sck)
          *ptr2=*ptr;
       }
       break;//*/
-/*      case CMD_CPY_R2E:
+      //------------------------
+      case CMD_CPY_R2E:
       {
          ptr=MemSysPtr;
          ptr+=Sck->RxPk->Data[0];
-         write_EEPROM(Sck->RxPk->Data[1],*ptr);
+         write_eeprom(Sck->RxPk->Data[1],*ptr);
       }
       break;// */
+      //------------------------
       case CMD_CPY_E2R:
       {
          ptr=(unsigned char*)MemSysPtr;
          ptr+=Sck->RxPk->Data[1];
-         *ptr=read_EEPROM(Sck->RxPk->Data[0]);
+         *ptr=read_eeprom(Sck->RxPk->Data[0]);
       }
       break;// */
-/*      case CMD_CPY_E2E:
+      //------------------------
+      case CMD_CPY_E2E:
       {
-         write_EEPROM(Sck->RxPk->Data[1],read_EEPROM(Sck->RxPk->Data[0]));
+         write_eeprom(Sck->RxPk->Data[1],read_EEPROM(Sck->RxPk->Data[0]));
       }
       break;// */
       //------------------------
       case CMD_IF_EQ_EE:
       case CMD_IF_MA_EE:
       {
-         Tmp0=read_EEPROM(Sck->RxPk->Data[0]);
-         Tmp1=read_EEPROM(Sck->RxPk->Data[1]);
+         Tmp0=read_eeprom(Sck->RxPk->Data[0]);
+         Tmp1=read_eeprom(Sck->RxPk->Data[1]);
          Len=Sck->RxPk->Data[2];
          if(cmd==CMD_IF_MA_EE)
          {
@@ -573,7 +574,7 @@ void Pdgv_Osi5(DgvSck *Sck)
          while(Len--)
          {
             //if(*ptr2!=255)
-            if(*ptr2>=&iGP.IOs[0] && *ptr2<=&iGP.IOs[IOs_Count-1])
+            if(*ptr2>=(*(unsigned char*)&iGP.IOs[0]) && *ptr2<=(*(unsigned char*)&iGP.IOs[IOs_Count-1]))
             {
                ptr=(unsigned char*)MemSysPtr;
                ptr+=*ptr2;
@@ -612,7 +613,7 @@ void Pdgv_Osi5(DgvSck *Sck)
             *ptr=*ptr2+((signed int8)Tmp0);
          }
       }
-      break;
+      break; // */
       //------------------------
       case CMD_CONFIRM_TCP:
       {
@@ -652,7 +653,7 @@ void Pdgv_Osi5(DgvSck *Sck)
             }
          }
       }
-      break;
+      break;//*/
       //------------------------
       case CMD_RUN_2TSK:
       {
@@ -660,7 +661,7 @@ void Pdgv_Osi5(DgvSck *Sck)
          InstTask(Sck->RxPk->Data[1]);
       }
       break;
-      //------------------------
+      //------------------------ */
       default:
       {
             Sck->TxPk=dgvMalloc(7);
@@ -681,10 +682,8 @@ void Pdgv_Osi5(DgvSck *Sck)
          while(Tmp0--)
          {
             restart_wdt();
-            delay_ms(250);
-            output_toggle(LED2);
+            delay_ms(5);
          }
-         input(LED2);
       }// */
       delay_ms(1);
    }

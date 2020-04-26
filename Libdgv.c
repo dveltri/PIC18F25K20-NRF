@@ -43,20 +43,32 @@ unsigned int16 Diff16(unsigned int16 Lst,unsigned int16 Now)
 
 unsigned int16 TimeDiff(unsigned int16 LastTime)
 {
-  if (get_timer0()>=LastTime)
-    return(get_timer0() - LastTime);
+  if (GetRtc()>=LastTime)
+    return(GetRtc() - LastTime);
   else
-    return(get_timer0() + (0xFFFF-LastTime)+1);
+    return(GetRtc() + (0xFFFF-LastTime)+1);
+}
+
+unsigned int32 TimeDiff32(unsigned int32 LastTime)
+{
+   unsigned int t32;
+   GetRtc32(t32);
+   if (t32 >= LastTime)
+      return(t32 - LastTime);
+   else
+      return(t32 + 1 + (0xFFFFFFFF - LastTime));
 }
 
 void Error(unsigned char ErrorCode)
 {
-   output_toggle(LED3);
-   fputc('\n',lnk1);
+   SetRed(LED2);
+   delay_ms(5);
+/*   fputc('\n',lnk1);
    fputc('&',lnk1);
    fputc(Hex2Asc[(ErrorCode>>4)&0x0F],lnk1);
    fputc(Hex2Asc[ErrorCode&0x0F],lnk1);
    fputc('\n',lnk1);
+   // */
    //write_EEPROM(ErrorCode,(read_EEPROM(ErrorCode)+1));
 }
 

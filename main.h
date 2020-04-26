@@ -8,9 +8,9 @@
 #FUSES INTRC                    //Internal RC Osc
 //#FUSES NOPLLEN                //No pll enable
 #FUSES NOMCLR
-#FUSES WDT2048                  //Watch Dog Timer uses Postscale
-#FUSES WDT
-//#FUSES NOWDT                  //No Watch Dog Timer
+//#FUSES WDT2048                //Watch Dog Timer uses Postscale
+//#FUSES WDT
+#FUSES NOWDT                  //No Watch Dog Timer
 //#FUSES INTRC_IO               //Internal RC Osc
 #FUSES BORV22                   //Brownout reset at 2.2V
 //#FUSES NOBROWNOUT
@@ -40,6 +40,10 @@
 #bit  PA3 =    PORTA.3
 #bit  PA5 =    PORTA.5
 #bit  PA6 =    PORTA.6
+
+#bit  PB6 =    PORTB.6
+#bit  PB7 =    PORTB.7
+
 #bit  PC0 =    PORTC.0
 #bit  PC1 =    PORTC.1
 #bit  PC2 =    PORTC.2
@@ -47,6 +51,7 @@
 #byte OSCTUNE= 0xF9B
 
 #byte PIR1 =  0xF9E
+#byte PIR2 =  0xFA1
 
 #byte TRISC =  0xF94
 #byte TRISB =  0xF93
@@ -59,6 +64,9 @@
 #byte LATE =  0xF8D
 
 #bit  RCIF  =  PIR1.5
+#bit  ADIF  =  PIR1.6
+
+#bit  TMR3IF  =  PIR2.1
 
 #byte TXSTA =  0xFAC
 #bit  TRMT  =  TXSTA.1
@@ -66,6 +74,11 @@
 #byte TMR3L =  0xFB2
 #byte TMR3H =  0xFB3
 
+#byte ADCON2 = 0xFC0
+#byte ADCON1 = 0xFC1
+#byte ADCON0 = 0xFC2
+#byte ADRESL = 0xFC3
+#byte ADRESH = 0xFC4
 #byte SSPBUF = 0xFC9
 #byte T2CON = 0xFCA
 #byte PR2 =   0xFCB
@@ -82,6 +95,22 @@
 #byte INTCON = 0xFF2
 #byte INTCON2 = 0xFF1
 #byte INTCON3 = 0xFF0
+
+
+#bit  ADON    =ADCON0.0
+#bit  ADGO    =ADCON0.1
+#bit  CHS0    =ADCON0.2
+#bit  CHS1    =ADCON0.3
+#bit  CHS2    =ADCON0.4
+#bit  CHS3    =ADCON0.5
+
+#bit  ADCS0    =ADCON2.0
+#bit  ADCS1    =ADCON2.1
+#bit  ADCS2    =ADCON2.2
+#bit  ACQT0    =ADCON2.3
+#bit  ACQT1    =ADCON2.4
+#bit  ACQT2    =ADCON2.5
+#bit  ADFM     =ADCON2.7
 
 #bit  T2CKPS0  =T2CON.0
 #bit  T2CKPS1  =T2CON.1
@@ -110,90 +139,96 @@
 #bit  Z  =     STATUS.2
 #bit  STATUS_Carry =  STATUS.0
 
-#define Version "base.v1805"
+#define Version "base.v1904"
 //------------------------------------------------------------------------------
 //---Port A
-#define GPIO00  PIN_A0
-#define GPIO01  PIN_A1
-#define GPIO02  PIN_A2
-#define GPIO03  PIN_A3
-#define GPIO04  PIN_A4
-#define GPIO05  PIN_A5
-#define GPIO06  PIN_A6
-#define GPIO07  PIN_A7
+#define GPIO00 PIN_A0
+#define GPIO01 PIN_A1
+#define GPIO02 PIN_A2
+#define GPIO03 PIN_A3
+#define GPIO04 PIN_A4
+#define GPIO05 PIN_A5
+#define GPIO06 PIN_A6
+#define LEDC   PIN_A7
 
 //---Port B
-#define GPIO08  PIN_B0
-#define GPIO09  PIN_B1
-#define GPIO10  PIN_B2
-#define GPIO11  PIN_B3
-#define GPIO12  PIN_B4
-#define GPIO13  PIN_B5
-#define ADD2    PIN_B6
-#define PGC     PIN_B6
-#define ADD1    PIN_B7
-#define PGD     PIN_B7
+#define GPIO07 PIN_B0
+#define GPIO08 PIN_B1
+#define GPIO09 PIN_B2
+#define GPIO10 PIN_B3
+#define GPIO11 PIN_B4
+#define GPIO12 PIN_B5
+#define PGC    PIN_B6
+#define RX2    PIN_B6
+#define PGD    PIN_B7
+#define TX2    PIN_B7
 
 //---Port C
-#define LEDC    PIN_C0
-#define GPIO14  PIN_C1
-#define LED1    PIN_C2
-#define GPIO15  PIN_C3
-#define LED2    PIN_C4
-#define LED3    PIN_C5
-#define TX1     PIN_C6
-#define RX1     PIN_C7
+#define GPIO13 PIN_C0
+#define GPIO14 PIN_C1
+#define GPIO15 PIN_C2
+#if((PCB&1)==1)
+#define LED3   PIN_C3
+#define LED2   PIN_C4
+#define LED1   PIN_C5
+#endif
+#if((PCB&2)==2)
+#define LED2   PIN_C3
+#define LED1   PIN_C4
+#define LED3   PIN_C5
+#endif
+#define TX1    PIN_C6
+#define RX1    PIN_C7
 
 //---Port D
-//#define GPIOxx  PIN_D0
-//#define GPIOxx  PIN_D1
-//#define GPIOxx  PIN_D2
-//#define GPIOxx  PIN_D3
-//#define GPIOxx  PIN_D4
-//#define GPIOxx  PIN_D5
-//#define GPIOxx  PIN_D6
-//#define GPIOxx  PIN_D7
+//#define PD0  PIN_D0
+//#define PD1  PIN_D1
+//#define PD2  PIN_D2
+//#define PD3  PIN_D3
+//#define PD4  PIN_D4
+//#define PD5  PIN_D5
+//#define PD6  PIN_D6
+//#define PD7  PIN_D7
 
 //---Port E
-//define GPIOxx   PIN_E0
-//define GPIOxx   PIN_E1
-//define GPIOxx   PIN_E2
+//define PE0   PIN_E0
+//define PE1   PIN_E1
+//define PE2   PIN_E2
 #define MCLR   PIN_E3
 #define ADD0   PIN_E3
-//define GPIOxx   PIN_E4
-//define GPIOxx   PIN_E5
-//define GPIOxx   PIN_E6
-//define GPIOxx   PIN_E7
+//define PE4   PIN_E4
+//define PE5   PIN_E5
+//define PE6   PIN_E6
+//define PE7   PIN_E7
 //------------------------------------------------------------------------------
-#DEVICE ADC=8
+#DEVICE ADC=10
+//#DEVICE ICD=TRUE
 //#use delay(internal=16M)
 #use delay(internal=64M)
-
+#USE SPI
+#if((PCB&6)==6)
+#use spi(DI=RX1, DO=TX1, CLK=LEDC, ENABLE=PIN_C3, BITS=16,stream=lnk1)
+#else
 #use rs232(baud=115200,parity=N,stop=1,xmit=TX1,rcv=RX1,ERRORS,bits=8,stream=lnk1)
+#endif
 //#use rs232(baud=38400,parity=N,stop=1,xmit=TX2,rcv=RX2,bits=8,force_sw,stream=lnk2) 
 
 //#use FAST_IO(A)
-#use FAST_IO(B)
+//#use FAST_IO(B)
 //#use FAST_IO(C)
 //#use FAST_IO(D)
-#use FAST_IO(E)
+//#use FAST_IO(E)
 //------------------------------------------------------------------------------
 #define delay delay_ms
-//#define LOG(x) fputs(x,lnk2)
-//#define LOGchr(x) fputc(x,lnk2)
-//#define LOGf(x,y) fprintf(lnk2,x,y)
+#define LOGf(x,y) fprintf(lnk2,x,y)
 //------------------------------------------------------------------------------
 #define IOs_Pins     12
+//--------------------
 #define IOs_Count    (IOs_Pins)
 #define Svr_Count    4
 #define Tmrs_Count   6
 #define Events_Count 9
-//------------------------------------------------------------------------------idex task
-#define Hw_Read_INP     0
-#define Hw_Procc_INP    1
-#define Hw_Tmrs         2
-#define Hw_ADC          3
-//------------------------------------------------------------------------------ typos de io
+//------------------------------------------------------------------------------ types of io
 #define IO_Flg_Typ_Msk  0x07
 #define IO_Flg_Typ_Out  0x00  // Salida On Off
 #define IO_Flg_Typ_OutA 0x01  // Salida Analoga
@@ -223,14 +258,16 @@ typedef struct
 //--------------------estructura de io en ram-------------------------------------
 typedef struct
 {
-  unsigned char Value;
-  unsigned char Flags;
-  unsigned char HigLvl; //cota H
-  unsigned char LowLvl; //cota L
-  unsigned char HigEvt;
-  unsigned char MidEvt;
-  unsigned char LowEvt;
-  unsigned char LstVal;
+   unsigned char Samples;
+   unsigned char Value;
+   unsigned char LValue;
+   unsigned char Flags;
+   unsigned char HigLvl; //cota H
+   unsigned char LowLvl; //cota L
+   unsigned char HigEvt;
+   unsigned char MidEvt;
+   unsigned char LowEvt;
+   unsigned int16 LstChg;
 }TS_IOs;
 //------------------------------------------------------------------------------
 typedef struct
@@ -247,7 +284,13 @@ typedef struct
   unsigned char OverFlowEv;
   //unsigned char Iteraciones;
 }TS_Tmrs;
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------idex task
+#define Hw_Tmrs         0
+#define Hw_Read_INP     1
+#define Hw_Procc_INP    2
+//#define Hw_Blind1       3
+//#define Hw_Blind2       4
+#define Hw_ADC          3
 typedef struct
 {
    TS_IOs IOs[IOs_Count];
@@ -255,7 +298,7 @@ typedef struct
    TS_Srv_Stk Srv[Svr_Count];
    uint8 Events[Events_Count];
    //-----------------------
-   uint8 AdChl;     //chanel of ADC
+   uint8 AdChl;       //chanel of ADC
 //   int8 diff;               //
 }TS_DGV_OS;
 
@@ -264,13 +307,20 @@ extern DgvSck iSck;
 extern TS_PDGV *pdgv;
 
 int8 InstTask(unsigned char Task);
-unsigned short GetInputs(void);
 void SetOutput(unsigned char Out,unsigned char value);
+unsigned int16 GetInputs(void);
+void UpdtInputV(unsigned char io,unsigned char val);
+void UpdtInput(unsigned char io,unsigned char val);
+
+//#define IDhw (0x10+(input(ADD2)<<2)+(input(ADD1)<<1)+(input(ADD0)<<0)^7)
+#define IDhw (0x10|((ADRESH>>5)&7));
+
 #define ToggleLed(x)    output_toggle(x)
 #define ToggleColor(x)  output_bit(x,input_state(LEDC));output_toggle(LEDC);
 #define SetGreen(x)     output_low(LEDC);output_high(x);
 #define SetRed(x)       output_high(LEDC);output_low(x);
 #define SetOff(x)       input(x)
 #define GetRTC()        get_timer0()
+#define GetRTC32(x)     {x=Htim0;x<<=16;x|=get_timer0();}
 #define Xms *62 //esto es la relacion de ticks y ms de get_timer0
 

@@ -5,6 +5,7 @@ unsigned int16 AbsDiff16(unsigned int16 v1,unsigned int16 v2);
 unsigned int8 Diff8(unsigned int8 Lst,unsigned int8 Now);
 unsigned int16 Diff16(unsigned int16 Lst,unsigned int16 Now);
 unsigned int16 TimeDiff(unsigned int16 LastTime);
+unsigned int32 TimeDiff32(unsigned int32 LastTime);
 void Error(unsigned char ErrorCode);
 extern char Hex2Asc[];
 int8 absd(int8 v1);
