@@ -32,7 +32,9 @@
 4,0,
 6,0,
 8,0,
+#if(nrf_mode==nrf_tx_mode)
 10,Task52,
+#endif
 12,0}//Task53
 
 #ROM int8 (getenv("EEPROM_ADDRESS")+Win1Time) ={

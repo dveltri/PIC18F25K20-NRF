@@ -151,5 +151,5 @@ int1 mask_rx_dr;
 
 #define nrf_tx_mode 1
 #define nrf_rx_mode 2
-#define nrf_mode nrf_tx_mode
+#define nrf_mode nrf_rx_mode
 #endif
