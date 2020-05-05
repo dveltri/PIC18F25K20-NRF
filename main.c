@@ -1,12 +1,17 @@
 //#include <18F14K22.h>
 #include <18F25K20.h>
-   //pcb 1 (1.6) pcb 2 (1,2)
-#define PCB 2  //1 2 6
+
+
+#define PCB 6  //1 2 6
 #include "eeprom.h"
 #include "Libdgv.h"
 #include "DgvH.h"
 #include "DgvP.h"
+#include "nRF24L01.h"
 #include "main.h"
+#include "nrf24.h"
+#include <string.h>
+
 //#ignore_warnings 216
 //-------------------
 #define DgvTask 1
@@ -97,7 +102,7 @@ void SerialRx1(void)
 #INT_AD
 void AnalogIn(void) 
 {
-   uint16 ValAD=0;
+   uint16_t ValAD=0;
    clear_interrupt(INT_AD);
    ValAD=read_adc(ADC_READ_ONLY);
    iGP.IOs[iGP.AdChl].Value=ValAD;
@@ -179,10 +184,10 @@ void main(void)
       //setup_comparator(NC_NC_NC_NC);                  // This device COMP currently not supported by the PICWizard
       restart_wdt();
       //--------------------------------
-      output_low(LEDC);
-      input(LED1);
-      input(LED2);
-      input(LED3);
+      SetGreen(LEDC);
+      SetOff(LED1);
+      SetOff(LED2);
+      SetOff(LED3);
    }
    //--------------------------------------------------------------------------- Init Structures
    if(True)
@@ -352,6 +357,29 @@ void main(void)
    //-----------------------------
    InstTask(read_EEPROM(Start_Ev));
    //--------------------------------------------------------------------------- */
+   uint8_t temp;
+   uint8_t q = 0;
+   uint8_t data_array[32];
+#if(nrf_mode==nrf_tx_mode)
+   uint8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+   uint8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
+#endif
+#if(nrf_mode==nrf_rx_mode)
+   uint8_t tx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
+   uint8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+#endif
+   /* init hardware pins */
+   nrf24_init();
+
+   /* Channel #2 , payload length: 4 */
+   nrf24_config(2);
+
+   /* Set the device addresses */
+   nrf24_tx_address(tx_address);
+   nrf24_rx_address(rx_address);
+   LOG("Inicio ");
+   LOG(Version);
+   LOGchr('\n');
    while(true)
    {
       countReadin++;
@@ -359,14 +387,32 @@ void main(void)
       //======================================================================== Dgv Protocolo v1
       if(True)
       {
+#if(nrf_mode==nrf_rx_mode)
+         if(nrf24_dataReady(&Tmp8))
+         {
+            LOGf("Pipe:%u\n",Tmp8);
+            if(Tmp8==1)
+            {
+               Tmp8=nrf24_payloadLength();
+               LOGf("\tSize:%u\n",Tmp8);
+               memset(data_array,0,sizeof(data_array));
+               nrf24_getData(data_array,Tmp8);
+               LOGchr('\t');LOG(data_array);
+            }
+         }
+#endif
+         /*
          while(kbhit(lnk1)!=0)
          {
             Pdgv_Osi2(DgvRxByLock(),(lnk1-1));
-         }// */
-         /*while(kbhit(lnk2)!=0)
+         }
+         // */
+         /*
+         while(kbhit(lnk2)!=0)
          {
             Pdgv_Osi2(fgetc(lnk2),(lnk2-1));
-         }// */
+         }
+         // */
          for(Idx=0;Idx<Lnk_Count;Idx++)
          {
             Sck=&pdgv->Sck[Idx];
@@ -407,6 +453,7 @@ void main(void)
       }
       restart_wdt();
       //======================================================================== Hw Inputs,Proc inputs, Tmrs Producto
+      if(true)
       {
          pSvr=&iGP.Srv[0];
          for(Idx=0;Idx<Svr_Count;Idx++)
@@ -556,6 +603,68 @@ void main(void)
                   break;
                   case Hw_ADC:
                   {
+#if(nrf_mode==nrf_tx_mode)
+                     // Fill the data buffer
+                     memset(data_array,0,sizeof(data_array));
+                     data_array[0] = 'h';
+                     data_array[1] = 'o';
+                     data_array[2] = 'l';
+                     data_array[3] = 'a';
+                     data_array[4] = ':';
+                     data_array[5] = 0x30+((q/10)%10);
+                     data_array[6] = 0x30+(q%10);
+                     if((q%10)==0)
+                     {
+                        data_array[7] = '\n';
+                     }
+                     else
+                     {
+                        data_array[7] = ' ';
+                        data_array[8] = 'a';
+                        data_array[9] = ' ';
+                        data_array[10] = 'T';
+                        data_array[11] = 'o';
+                        data_array[12] = 'd';
+                        data_array[13] = 'o';
+                        data_array[14] = 's';
+                        data_array[15] = '\n';
+                     }
+                     q++;
+                     // Automatically goes to TX mode
+                     nrf24_send(data_array,strlen(data_array));
+                    
+                     // Wait for transmission to end
+                     while(nrf24_isSending());
+            
+                     // Make analysis on last tranmission attempt
+                     temp = nrf24_lastMessageStatus();
+            
+                     if(temp == NRF24_TRANSMISSON_OK)
+                     {
+                        LOG("> Tranmission went OK\n");
+                     }
+                     else if(temp == NRF24_MESSAGE_LOST)
+                     {
+                        LOG("> Message is lost ...\n");    
+                     }
+                     /*else if(temp == NRF24_FIFO_NOT_FULL)
+                     {
+                        LOG("> Message is not full...\n");    
+                     }// */
+                     // Retranmission count indicates the tranmission quality
+                     temp = nrf24_retransmissionCount();
+                     LOGf("> Retranmission count: %d\n",temp);
+               
+                     // Optionally, go back to RX mode ...
+                     nrf24_powerUpRx();
+               
+                     // Or you might want to power down after TX
+                     // nrf24_powerDown();            
+               
+                     // Wait a little ...
+                     //delay_ms(10);
+#endif
+                     //---------------------------- */ 
                      set_adc_channel(iGP.AdChl+7);
                      delay_us(20);
                      iGP.AdChl++;
@@ -571,6 +680,7 @@ void main(void)
       }
       restart_wdt();
       //======================================================================== Dgv Kernel
+      if(true)
       {
          Idx=0;
          while(Idx<Events_Count && (iSck.TxPk==0))   // procesa tareas internas hasta que txpk sea diferente de 0
@@ -588,7 +698,7 @@ void main(void)
                iSck.RxPk->Data[0]=read_EEPROM(Tmp8+1);
                iSck.RxPk->Data[1]=read_EEPROM(Tmp8+2);
                iSck.RxPk->Data[2]=Tmp8;
-               output_high(LED1);
+               SetHi(LED1);
                Pdgv_Osi5(&iSck);
                {
                   dgvFree(iSck.RxPk);
@@ -605,11 +715,12 @@ void main(void)
                Idx++;
             }
          }
-         input(LED1);
+         SetOff(LED1);
          Pdgv_TxStsMch(&iSck,Idx);
       }
       restart_wdt();
       //======================================================================== Driver Hw Outputs
+      if(true)
       {
          pIOs=&iGP.IOs[0];
          for(Tmp8=0;Tmp8<IOs_Count;Tmp8++)    //escribe todas las salidas
@@ -705,12 +816,15 @@ int8 InstTask(unsigned char Task)
    return -1;
 }
 #endif
-//==============================================================================
+//=============================================================================
 #include "DgvP.c"
-//==============================================================================
+//=============================================================================
 #include "DgvHeap.c"
-//==============================================================================  
+//=============================================================================  
 #include "EeData.c"
-//==============================================================================
+//=============================================================================
 #include "Libdgv.c"
+//=============================================================================
+#include "radioPinFunctions.c"
+#include "nrf24.c"
 

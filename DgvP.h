@@ -123,7 +123,7 @@ unsigned char Pdgv_Osi3(DgvSck *Sck);
 #define DgvTxBy(x)
 #define DgvTxFlush()
 #define DgvRxByNoLock(x)
-#define DgvRxByLock()
+#define DgvRxByLock() '\0'
 #else
 #define DgvTxBy(x)    fputc(x,lnk1);rchr=fgetc(lnk1);if(x!=rchr){SetRed(LED2);}tchr=x
 #define DgvTxFlush()

@@ -1,4 +1,4 @@
-#define configTOTAL_HEAP_SIZE 1024 //(768) SI SE BAJA MUCHO NO PUEDE CONFORMAR LA RESPUESTA DE 64BYTE
+#define configTOTAL_HEAP_SIZE 768 //(768) SI SE BAJA MUCHO NO PUEDE CONFORMAR LA RESPUESTA DE 64BYTE
 #define EnShwMem 0
 //------------------------------------------------------------------------------------------------
 void InitDgvHeap(void);

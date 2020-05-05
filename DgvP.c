@@ -19,9 +19,9 @@ void InitDgvP(void)
    {
       restart_wdt();
       delay_ms(250);
-      output_toggle(LED1);
+      ToggleLed(LED1);
    }
-   input(LED1);
+   SetOff(LED1);
 }
 
 unsigned char IFIDLIST(unsigned char IDT)

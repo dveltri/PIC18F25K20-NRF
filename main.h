@@ -1,8 +1,7 @@
 #define int8 char
 #define int16 short
-#define uint8 unsigned char
-#define uint16 unsigned short
-
+#define uint8_t unsigned int8
+#define uint16_t unsigned int16
 //------------------------------------------------------------------------------
 //#FUSES RC
 #FUSES INTRC                    //Internal RC Osc
@@ -88,7 +87,7 @@
 
 #byte TMR0L =  0xFD6
 #byte TMR0H =  0xFD7
-#byte STATUS = 0xFD8
+//#byte STATUS = 0xFD8
 
 #byte BSR =    0xFE0
 
@@ -136,8 +135,8 @@
 #bit  TMR0IP   = INTCON2.2
 #bit  RBIP     = INTCON2.0
 
-#bit  Z  =     STATUS.2
-#bit  STATUS_Carry =  STATUS.0
+//#bit  Z  =     STATUS.2
+//#bit  STATUS_Carry =  STATUS.0
 
 #define Version "base.v1904"
 //------------------------------------------------------------------------------
@@ -201,17 +200,25 @@
 //define PE6   PIN_E6
 //define PE7   PIN_E7
 //------------------------------------------------------------------------------
+#define RF24_CS   PIN_B0
+#define RF24_CE   PIN_C3
+#define RF24_IRQ  PIN_C4
+#define SPI_MOSI  PIN_C6
+#define SPI_MISO  PIN_C7
+#define SPI_CLK   PIN_A7
+//------------------------------------------------------------------------------
 #DEVICE ADC=10
 //#DEVICE ICD=TRUE
 //#use delay(internal=16M)
 #use delay(internal=64M)
-#USE SPI
 #if((PCB&6)==6)
-#use spi(DI=RX1, DO=TX1, CLK=LEDC, ENABLE=PIN_C3, BITS=16,stream=lnk1)
+//, ENABLE=RF24_CE, ENABLE_ACTIVE=1
+#use spi(MASTER, FORCE_SW, DO=SPI_MOSI, DI=SPI_MISO, CLK=SPI_CLK, mode=0, baud=100000, BITS=8, MSB_FIRST, SAMPLE_RISE, stream=RF24_SPI)
+#define lnk1 RF24_SPI
 #else
 #use rs232(baud=115200,parity=N,stop=1,xmit=TX1,rcv=RX1,ERRORS,bits=8,stream=lnk1)
 #endif
-//#use rs232(baud=38400,parity=N,stop=1,xmit=TX2,rcv=RX2,bits=8,force_sw,stream=lnk2) 
+#use rs232(baud=38400,parity=N,stop=1,xmit=TX2,rcv=RX2,bits=8,force_sw,stream=lnk2) 
 
 //#use FAST_IO(A)
 //#use FAST_IO(B)
@@ -221,6 +228,8 @@
 //------------------------------------------------------------------------------
 #define delay delay_ms
 #define LOGf(x,y) fprintf(lnk2,x,y)
+#define LOG(x) fputs (x, lnk2)
+#define LOGchr(x) fputc(x, lnk2)
 //------------------------------------------------------------------------------
 #define IOs_Pins     12
 //--------------------
@@ -296,9 +305,9 @@ typedef struct
    TS_IOs IOs[IOs_Count];
    TS_Tmrs Tmrs[Tmrs_Count];
    TS_Srv_Stk Srv[Svr_Count];
-   uint8 Events[Events_Count];
+   uint8_t Events[Events_Count];
    //-----------------------
-   uint8 AdChl;       //chanel of ADC
+   uint8_t AdChl;       //chanel of ADC
 //   int8 diff;               //
 }TS_DGV_OS;
 
@@ -315,11 +324,23 @@ void UpdtInput(unsigned char io,unsigned char val);
 //#define IDhw (0x10+(input(ADD2)<<2)+(input(ADD1)<<1)+(input(ADD0)<<0)^7)
 #define IDhw (0x10|((ADRESH>>5)&7));
 
+#if((PCB&6)==6)
+#define ToggleLed(x)    //output_toggle(x)
+#define ToggleColor(x)  //output_bit(x,input_state(LEDC));output_toggle(LEDC);
+#define SetGreen(x)     //output_low(LEDC);output_high(x);
+#define SetRed(x)       //output_high(LEDC);output_low(x);
+#define SetOff(x)       //input(x)
+#define SetHi(x)        //output_high(x)
+#define SetLo(x)        //output_low(x)
+#else
 #define ToggleLed(x)    output_toggle(x)
 #define ToggleColor(x)  output_bit(x,input_state(LEDC));output_toggle(LEDC);
 #define SetGreen(x)     output_low(LEDC);output_high(x);
 #define SetRed(x)       output_high(LEDC);output_low(x);
 #define SetOff(x)       input(x)
+#define SetHi(x)        output_high(x)
+#define SetLo(x)        output_low(x)
+#endif
 #define GetRTC()        get_timer0()
 #define GetRTC32(x)     {x=Htim0;x<<=16;x|=get_timer0();}
 #define Xms *62 //esto es la relacion de ticks y ms de get_timer0
