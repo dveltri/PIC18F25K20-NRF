@@ -120,8 +120,8 @@ unsigned char Pdgv_Osi3(DgvSck *Sck);
          void Pdgv_TxStsMch(DgvSck *Sck,unsigned char ori);
 //------------------------------------------------------------------------------
 #if((PCB&6)==6)
-#define DgvTxBy(x)
-#define DgvTxFlush()
+#define DgvTxBy(x) data_array[y]=x;y++
+#define DgvTxFlush() flushNrf(data_array,y);y=0
 #define DgvRxByNoLock(x)
 #define DgvRxByLock() '\0'
 #else

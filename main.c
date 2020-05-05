@@ -19,6 +19,7 @@
 TS_DGV_OS iGP;
 DgvSck iSck;
 TS_PDGV *pdgv;
+uint8_t data_array[32];
 //------------------------
 unsigned char iRBsts=0;
 unsigned char RBsts=0;
@@ -359,7 +360,7 @@ void main(void)
    //--------------------------------------------------------------------------- */
    uint8_t temp;
    uint8_t q = 0;
-   uint8_t data_array[32];
+   
 #if(nrf_mode==nrf_tx_mode)
    uint8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
    uint8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
@@ -390,14 +391,20 @@ void main(void)
 #if(nrf_mode==nrf_rx_mode)
          if(nrf24_dataReady(&Tmp8))
          {
-            LOGf("Pipe:%u\n",Tmp8);
-            if(Tmp8==1)
+            //LOGf("Pipe:%u\n",Tmp8);
+            if(Tmp8==1) //pipe
             {
                Tmp8=nrf24_payloadLength();
-               LOGf("\tSize:%u\n",Tmp8);
+               LOGf("Size:%u",Tmp8);
                memset(data_array,0,sizeof(data_array));
                nrf24_getData(data_array,Tmp8);
-               LOGchr('\t');LOG(data_array);
+               LOGchr('\t');LOG(data_array);LOGchr('\n');
+               /*
+               for(i=0;i<Tmp8;i++)
+               { 
+                  Pdgv_Osi2(data_array[i],(lnk1-1));
+               }
+               // */
             }
          }
 #endif
@@ -603,67 +610,6 @@ void main(void)
                   break;
                   case Hw_ADC:
                   {
-#if(nrf_mode==nrf_tx_mode)
-                     // Fill the data buffer
-                     memset(data_array,0,sizeof(data_array));
-                     data_array[0] = 'h';
-                     data_array[1] = 'o';
-                     data_array[2] = 'l';
-                     data_array[3] = 'a';
-                     data_array[4] = ':';
-                     data_array[5] = 0x30+((q/10)%10);
-                     data_array[6] = 0x30+(q%10);
-                     if((q%10)==0)
-                     {
-                        data_array[7] = '\n';
-                     }
-                     else
-                     {
-                        data_array[7] = ' ';
-                        data_array[8] = 'a';
-                        data_array[9] = ' ';
-                        data_array[10] = 'T';
-                        data_array[11] = 'o';
-                        data_array[12] = 'd';
-                        data_array[13] = 'o';
-                        data_array[14] = 's';
-                        data_array[15] = '\n';
-                     }
-                     q++;
-                     // Automatically goes to TX mode
-                     nrf24_send(data_array,strlen(data_array));
-                    
-                     // Wait for transmission to end
-                     while(nrf24_isSending());
-            
-                     // Make analysis on last tranmission attempt
-                     temp = nrf24_lastMessageStatus();
-            
-                     if(temp == NRF24_TRANSMISSON_OK)
-                     {
-                        LOG("> Tranmission went OK\n");
-                     }
-                     else if(temp == NRF24_MESSAGE_LOST)
-                     {
-                        LOG("> Message is lost ...\n");    
-                     }
-                     /*else if(temp == NRF24_FIFO_NOT_FULL)
-                     {
-                        LOG("> Message is not full...\n");    
-                     }// */
-                     // Retranmission count indicates the tranmission quality
-                     temp = nrf24_retransmissionCount();
-                     LOGf("> Retranmission count: %d\n",temp);
-               
-                     // Optionally, go back to RX mode ...
-                     nrf24_powerUpRx();
-               
-                     // Or you might want to power down after TX
-                     // nrf24_powerDown();            
-               
-                     // Wait a little ...
-                     //delay_ms(10);
-#endif
                      //---------------------------- */ 
                      set_adc_channel(iGP.AdChl+7);
                      delay_us(20);

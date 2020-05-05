@@ -47,3 +47,37 @@ void nrf24_csn_digitalWrite(uint8_t state)
     }
 }
 /* ------------------------------------------------------------------------- */
+
+
+void flushNrf(uint8_t*dat,uint8_t len)
+{
+   
+   // Automatically goes to TX mode
+   nrf24_send(dat,len);
+   
+   // Wait for transmission to end
+   while(nrf24_isSending());
+   
+   // Make analysis on last tranmission attempt
+   len = nrf24_lastMessageStatus();
+   
+   if(len == NRF24_TRANSMISSON_OK)
+   {
+   LOG("> Tranmission went OK\n");
+   }
+   else if(len == NRF24_MESSAGE_LOST)
+   {
+   LOG("> Message is lost ...\n");    
+   }
+   /*else if(temp == NRF24_FIFO_NOT_FULL)
+   {
+   LOG("> Message is not full...\n");    
+   }// */
+   // Retranmission count indicates the tranmission quality
+   len = nrf24_retransmissionCount();
+   LOGf("> Retranmission count: %d\n",len);
+   
+   // Optionally, go back to RX mode ...
+   nrf24_powerUpRx();
+   
+}

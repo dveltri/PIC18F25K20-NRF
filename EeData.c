@@ -32,15 +32,15 @@
 4,0,
 6,0,
 8,0,
-10,0,
+10,Task52,
 12,0}//Task53
 
 #ROM int8 (getenv("EEPROM_ADDRESS")+Win1Time) ={
 0,0,0,0}
 
 #ROM int8 (getenv("EEPROM_ADDRESS")+LsEventos) ={
-CMD_RUN_2TSK,196,255,
-CMD_SEND_Tsk,1,Task58,
+CMD_RUN_2TSK,196,255,//Task58
+CMD_SEND_Tsk,1,Task58,//Task57
 CMD_WRAM,128,127,
 CMD_WRAM,128,0,
 CMD_Dom_OmOff,128,255,

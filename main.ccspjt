@@ -46,8 +46,9 @@ AdditionalOptionString=
 10=eeprom.h
 11=Libdgv.h
 12=DgvH.h
-13=
+13=EeData.c
 Link=0
+14=
 [Units]
 Count=1
 1=main (main)

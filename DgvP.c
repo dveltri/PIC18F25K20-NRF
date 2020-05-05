@@ -32,7 +32,7 @@ unsigned char IFIDLIST(unsigned char IDT)
       if(IDT==pdgv->ID[tmp0])
          return tmp0;
       tmp0++;
-   }// */
+   }
    return 0;
 }
 
@@ -83,6 +83,7 @@ void Pdgv_TxPk(DgvSck *Sck)
    unsigned char max;
    unsigned char tchr;
    unsigned char rchr;
+   unsigned char y=0;
    if(Sck->TxPk==0)
     return;
    DgvRxByNoLock(lnk);
@@ -103,6 +104,7 @@ void Pdgv_TxPk(DgvSck *Sck)
       DgvTxBy(*ptr);
       ptr++;
    }
+   DgvTxFlush();
    SetOff(LED2);
    //enable_interrupts(GLOBAL); 
 }
@@ -297,13 +299,13 @@ void Pdgv_Osi5(DgvSck *Sck)
       case CMD_RESET:
       {
          reset_cpu();
-      }// */
+      }
       break;
       case CMD_CHG_ID:
       {
          write_eeprom(IDOeI,Sck->RxPk->Data[0]);
          pdgv->ID[1]=Sck->RxPk->Data[0];
-      }// */
+      }
       break;
       //-----------------------
       case CMD_PING:
@@ -676,7 +678,8 @@ void Pdgv_Osi5(DgvSck *Sck)
    {
       Sck->TxPk->Ctrl|=pdgv_UDP;
       Pdgv_AddCrc(Sck);
-      /*if(Sck->RxPk->Ctrl&128)
+      /*
+      if(Sck->RxPk->Ctrl&128)
       {
          Tmp0=pdgv->ID[1];
          while(Tmp0--)
@@ -684,7 +687,8 @@ void Pdgv_Osi5(DgvSck *Sck)
             restart_wdt();
             delay_ms(5);
          }
-      }// */
+      }
+      // */
       delay_ms(1);
    }
 }

@@ -94,24 +94,7 @@ extern void nrf24_ce_digitalWrite(uint8_t state);
 /* -------------------------------------------------------------------------- */
 extern void nrf24_csn_digitalWrite(uint8_t state);
 
-/* -------------------------------------------------------------------------- */
-/* nrf24 SCK pin control function
- *    - state:1 => Pin HIGH
- *    - state:0 => Pin LOW     */
-/* -------------------------------------------------------------------------- */
-extern void nrf24_sck_digitalWrite(uint8_t state);
-
-/* -------------------------------------------------------------------------- */
-/* nrf24 MOSI pin control function
- *    - state:1 => Pin HIGH
- *    - state:0 => Pin LOW     */
-/* -------------------------------------------------------------------------- */
-extern void nrf24_mosi_digitalWrite(uint8_t state);
-
-/* -------------------------------------------------------------------------- */
-/* nrf24 MISO pin read function
-/* - returns: Non-zero if the pin is high */
-/* -------------------------------------------------------------------------- */
-extern uint8_t nrf24_miso_digitalRead();
+extern void flushNrf(uint8_t*dat,uint8_t len);
+extern uint8_t data_array[32];
 
 #endif

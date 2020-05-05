@@ -14,6 +14,7 @@
 #include "nrf24.h"
 #define DBG_NRF(x) //LOG(x)
 #define DBG_NRFchr(x) //LOGchr(x)
+#define spi_transfer(x) spi_xfer(RF24_SPI, x)
 
 /* init the hardware pins */
 void nrf24_init() 
@@ -285,44 +286,6 @@ void nrf24_powerDown()
 {
     nrf24_ce_digitalWrite(LOW);
     nrf24_configRegister(CONFIG,nrf24_CONFIG_cons);
-}
-
-/* software spi routine */
-uint8_t spi_transfer(uint8_t tx)
-{
-   uint8_t i = 0;
-   uint8_t rx = 0;    
-   
-   rx = spi_xfer(RF24_SPI, tx);
-   
-   
-   /*nrf24_sck_digitalWrite(LOW);
-   
-   for(i=0;i<8;i++)
-   {
-   
-      if(tx & (1<<(7-i)))
-      {
-         nrf24_mosi_digitalWrite(HIGH);
-      }
-      else
-      {
-         nrf24_mosi_digitalWrite(LOW);
-      }
-      
-      nrf24_sck_digitalWrite(HIGH);
-      
-      rx = rx << 1;
-      if(nrf24_miso_digitalRead())
-      {
-         rx |= 0x01;
-      }
-      
-      nrf24_sck_digitalWrite(LOW);
-      
-   }
-   // */
-   return rx;
 }
 
 /* send and receive multiple bytes over SPI */
