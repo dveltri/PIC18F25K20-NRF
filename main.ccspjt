@@ -35,20 +35,25 @@ AdditionalOptionString=
 
 [Opened Files]
 1=main.c
-2=nrf24l01.h
-3=EeData.c
-4=
-5=nrf24.h
-6=radioPinFunctions.c
+2=main.h
+3=DgvP.c
+4=Libdgv.c
+5=DgvH.h
+6=C:\Program Files (x86)\PICC\Devices\18F25K20.h
 7=DgvP.h
-8=DgvP.c
-9=Libdgv.c
-10=eeprom.h
-11=Libdgv.h
-12=DgvH.h
-13=EeData.c
+8=nrf24.c
+9=dht11.c
+10=dht11.h
+11=radioPinFunctions.c
+12=nRF24L01.h
+13=hwdef.h
 Link=0
-14=
+14=bmp280.h
+15=mq7.h
+16=
+[ExtraIncludes]
+Count=1
+1=main=e:\dropbox\ingav\pic18f25k20-nrf\dht11.c
 [Units]
 Count=1
 1=main (main)

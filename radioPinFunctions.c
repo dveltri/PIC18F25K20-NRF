@@ -63,11 +63,13 @@ void flushNrf(uint8_t*dat,uint8_t len)
    
    if(len == NRF24_TRANSMISSON_OK)
    {
-   LOG("> Tranmission went OK\n");
+      //if(nrf_link.transmited<255)
+      nrf_link.transmited++;
+      LOG("> Tranmission went OK\n");
    }
    else if(len == NRF24_MESSAGE_LOST)
    {
-   LOG("> Message is lost ...\n");    
+      LOG("> Message is lost ...\n");    
    }
    /*else if(temp == NRF24_FIFO_NOT_FULL)
    {
@@ -75,6 +77,9 @@ void flushNrf(uint8_t*dat,uint8_t len)
    }// */
    // Retranmission count indicates the tranmission quality
    len = nrf24_retransmissionCount();
+   len >>= 1;
+   nrf_link.retransmit >>= 1;
+   nrf_link.retransmit = len;
    LOGf("> Retranmission count: %d\n",len);
    
    // Optionally, go back to RX mode ...
