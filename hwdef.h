@@ -1,4 +1,5 @@
 #define int8 char
+#define int8_t char
 #define int16 short
 #define uint8_t unsigned int8
 #define uint16_t unsigned int16

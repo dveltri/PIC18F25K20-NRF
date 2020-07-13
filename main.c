@@ -1,6 +1,22 @@
 //#include <18F14K22.h>
 #include <18F25K20.h>
 
+/*
+1  LED FET1
+2  cs.bmp
+3  clk.nrf.bmp
+4  miso.nrf.bmp
+5  mosi.nrf.bmp
+6  en.nrf
+7  cs.nrf
+8  irq.nrf
+9  AD.vref+
+10 AD.vbat
+11 AD.lux
+12 AD.luz_uv
+13 AD.air_quality
+14 AD.hr_gnd
+*/
 
 #define PCB 6  //1 2 6
 #include "hwdef.h"
@@ -375,6 +391,8 @@ void main(void)
    //-----------------------------
    InstTask(read_EEPROM(Start_Ev));
    //--------------------------------------------------------------------------- */
+   bmp280_init(0);
+   //--------------------------------------------------------------------------- */
 #if(nrf_mode==nrf_tx_mode)
    uint8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
    uint8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
@@ -632,10 +650,19 @@ void main(void)
                      sleep();
                      restart_wdt();
                      sensors();
-                     //dht11.temperature=
                      update_dht11(&dht11);
                      sendping++;
-                     if(iSck.TxPk==0 && (sendping%1)==0)
+                     if(iGP.battery>3600)
+                        temp=1;
+                     else
+                        if(iGP.battery>3000)
+                           temp=4;
+                        else
+                           if(iGP.battery>2600)
+                              temp=8;
+                           else
+                              temp=16;
+                     if(iSck.TxPk==0 && (sendping%temp)==0)
                      {
                         //output_bit(PIN_C1, 1);
                         output_bit(PIN_C2, 1);
@@ -840,8 +867,9 @@ void sensors(void)
    Tmp16 = ADRESH<<8;
    Tmp16 |= ADRESL;
    Tmp16 >>= 1;
-   iGP.luz_am = Tmp16;
-   //iGP.luz_am = 512; iGP.luz_am -= Tmp16;
+   //iGP.luz_am = Tmp16;
+   iGP.luz_am = 512;
+   iGP.luz_am -= Tmp16;
    iGP.luz_am *= 100;
    iGP.luz_am /= 512;
    //----------- Ground HR -----------------
@@ -940,4 +968,5 @@ int8 InstTask(unsigned char Task)
 #include "radioPinFunctions.c"
 #include "nrf24.c"
 #include "dht11.c"
+#include "bmp280.c"
 
