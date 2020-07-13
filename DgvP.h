@@ -76,6 +76,7 @@
 //------------------------------------------------------------------------------
 typedef struct
 {
+   //unsigned char Prech;
    unsigned char Ctrl;
    unsigned char IdS;
    unsigned char IdT;

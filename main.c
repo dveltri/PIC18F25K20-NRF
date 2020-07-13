@@ -1,8 +1,25 @@
 //#include <18F14K22.h>
 #include <18F25K20.h>
 
+/*
+1  LED FET1
+2  cs.bmp
+3  clk.nrf.bmp
+4  miso.nrf.bmp
+5  mosi.nrf.bmp
+6  en.nrf
+7  cs.nrf
+8  irq.nrf
+9  AD.vref+
+10 AD.vbat
+11 AD.lux
+12 AD.luz_uv
+13 AD.air_quality
+14 AD.hr_gnd
+*/
 
 #define PCB 6  //1 2 6
+#include "hwdef.h"
 #include "eeprom.h"
 #include "Libdgv.h"
 #include "DgvH.h"
@@ -10,6 +27,9 @@
 #include "nRF24L01.h"
 #include "main.h"
 #include "nrf24.h"
+#include "dht11.h"
+#include "bmp280.h"
+#include "mq7.h"
 #include <string.h>
 
 //#ignore_warnings 216
@@ -19,6 +39,10 @@
 TS_DGV_OS iGP;
 DgvSck iSck;
 TS_PDGV *pdgv;
+NrfLink_t nrf_link;
+dht11_data_t dht11;
+bmp280_t bmp280;
+mq7_t mq7;
 uint8_t data_array[32];
 //------------------------
 unsigned char iRBsts=0;
@@ -103,20 +127,27 @@ void SerialRx1(void)
 #INT_AD
 void AnalogIn(void) 
 {
-   uint16_t ValAD=0;
    clear_interrupt(INT_AD);
+   /*uint16_t ValAD=0;
    ValAD=read_adc(ADC_READ_ONLY);
-   iGP.IOs[iGP.AdChl].Value=ValAD;
+   iGP.IOs[iGP.AdChl].Value=ValAD;*/
    /*iGP.AdChl++;
    if(iGP.AdChl>=4)
       iGP.AdChl=3;
    set_adc_channel(iGP.AdChl);
    delay_us(20);// */
-   read_adc(ADC_START_ONLY);
+   //read_adc(ADC_START_ONLY);
 }
 
 void main(void)
 {
+   memset(&iGP,0,sizeof(iGP));
+   memset(&iSck,0,sizeof(iSck));
+   memset(&nrf_link,0,sizeof(nrf_link));
+   memset(&dht11,0,sizeof(dht11));
+   memset(&bmp280,0,sizeof(bmp280));
+   memset(&mq7,0,sizeof(mq7));
+   memset(data_array,0,sizeof(data_array));
    //--------------------------------------------------------------------------- Init
    disable_interrupts(GLOBAL);
    //setup_oscillator(OSC_16MHZ|OSC_INTRC);//OSC_PLL_ON
@@ -142,10 +173,9 @@ void main(void)
       SET_TRIS_A(0xFF);//0xE0
       PORTA =  0;
       
-      ANSELH = 0x10;
       PORTB =  0;
       SET_TRIS_B(0xFF);
-      WPUB=0xFF;
+      WPUB=0xF0;
       
       SET_TRIS_C(0x80);
       PORTC =  0;
@@ -296,7 +326,7 @@ void main(void)
       RBIF=FALSE;    // On Change int Flag 
       INTCON|=0x08;
       INTCON&=~0x01;
-      IOCB=0xF0;     // individual pin on change interrup enable
+      //IOCB=0xF0;     // individual pin on change interrup enable
       //enable_interrupts(INT_EXT);
       enable_interrupts(GLOBAL); 
       //--------------------------------
@@ -330,7 +360,6 @@ void main(void)
       SetOff(LED1);
       SetOff(LED2);
       SetOff(LED3);
-      ANSELH = 0x10;
       PORTB=0xFF;
       LATB=0xFF;
       IOCB=0xFF;
@@ -342,25 +371,28 @@ void main(void)
       delay_us(25);
       read_adc(ADC_START_ONLY);
       //-----------------------------
-      //---------
-      ADCON2=0x2F;
-      ADCON1=0x00;
-      ANSELH=0x10;
-      ADCON0=0x31;
-      ADCON0|=0x02;
-      CHS0=0;
-      CHS1=0;
-      CHS2=1;
-      CHS3=1;
-      ADFM=0;
-      ADON=1;
+      ANSEL.ANS0=1;
+      ANSEL.ANS1=1;
+      ANSEL.ANS2=1;
+      ANSEL.ANS3=1;
+      ANSELH.ANS8=1;
+      ANSELH.ANS10=1;
+
+      ADCON2.ADCS=7;
+      ADCON2.ACQT=7;
+      ADCON2.ADFM=0;
+      //ADCON2=0x2F;
+      ADCON1.VCFG0=0;
+      ADCON1.VCFG1=0;
+      //ADCON1=0x00;
+      ADCON0.ADON=1;
+      //ADCON0=0x31;
    }
    //-----------------------------
    InstTask(read_EEPROM(Start_Ev));
    //--------------------------------------------------------------------------- */
-   uint8_t temp;
-   uint8_t q = 0;
-   
+   bmp280_init(0);
+   //--------------------------------------------------------------------------- */
 #if(nrf_mode==nrf_tx_mode)
    uint8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
    uint8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
@@ -381,6 +413,9 @@ void main(void)
    LOG("Inicio ");
    LOG(Version);
    LOGchr('\n');
+   uint16_t sendping=0;
+   setup_wdt(WDT_ON);
+   uint8_t temp=0;
    while(true)
    {
       countReadin++;
@@ -395,14 +430,15 @@ void main(void)
             if(Tmp8==1) //pipe
             {
                Tmp8=nrf24_payloadLength();
-               LOGf("Size:%u",Tmp8);
+               //LOGf("Size:%u",Tmp8);
                memset(data_array,0,sizeof(data_array));
                nrf24_getData(data_array,Tmp8);
-               LOGchr('\t');LOG(data_array);LOGchr('\n');
-               /*
+               //LOGchr('\t');LOG(data_array);LOGchr('\n');
+               uint8_t i;
                for(i=0;i<Tmp8;i++)
                { 
-                  Pdgv_Osi2(data_array[i],(lnk1-1));
+                  LOGchr(data_array[i]);
+                  //Pdgv_Osi2(data_array[i],(lnk1-1));
                }
                // */
             }
@@ -610,13 +646,63 @@ void main(void)
                   break;
                   case Hw_ADC:
                   {
-                     //---------------------------- */ 
+#if(nrf_mode==nrf_tx_mode)
+                     sleep();
+                     restart_wdt();
+                     sensors();
+                     update_dht11(&dht11);
+                     sendping++;
+                     if(iGP.battery>3600)
+                        temp=1;
+                     else
+                        if(iGP.battery>3000)
+                           temp=4;
+                        else
+                           if(iGP.battery>2600)
+                              temp=8;
+                           else
+                              temp=16;
+                     if(iSck.TxPk==0 && (sendping%temp)==0)
+                     {
+                        //output_bit(PIN_C1, 1);
+                        output_bit(PIN_C2, 1);
+                        iSck.TxPk=dgvMalloc(8+32);
+                        iSck.TxPk->Ctrl=pdgv_UDP;
+                        //iSck.TxPk->Ctrl|=pdgv_Chs;
+                        //iSck.TxPk->Ctrl=20;
+                        iSck.TxPk->IdS=3;
+                        iSck.TxPk->IdT=1;
+                        iSck.TxPk->SckS=2;
+                        iSck.TxPk->SckT=7;
+                        //-------------------------------------------------------*/
+                        iSck.TxPk->Len=18;
+                        memcpy(&iSck.TxPk->Data[0],&iGP.packet_count,sizeof(iGP.packet_count));
+                        memcpy(&iSck.TxPk->Data[2],&iGP.battery,sizeof(iGP.battery));
+                        memcpy(&iSck.TxPk->Data[4],&iGP.luz_am,sizeof(iGP.luz_am));
+                        memcpy(&iSck.TxPk->Data[6],&iGP.luz_uv,sizeof(iGP.luz_uv));
+                        memcpy(&iSck.TxPk->Data[8],&dht11.temperature,sizeof(dht11.temperature));
+                        memcpy(&iSck.TxPk->Data[10],&dht11.humidity,sizeof(dht11.humidity));
+                        memcpy(&iSck.TxPk->Data[12],&bmp280.hPa,sizeof(bmp280.hPa));
+                        memcpy(&iSck.TxPk->Data[14],&mq7.monoxido,sizeof(mq7.monoxido));
+                        memcpy(&iSck.TxPk->Data[16],&iGP.hr_gnd,sizeof(iGP.hr_gnd));
+                        //memcpy(&iSck.TxPk->Data[4],&nrf_link,sizeof(NrfLink_t));
+                        //-------------------------------------------------------*/
+                        Pdgv_AddCrc(&iSck);
+                        Pdgv_TxPk(&iSck);
+                        dgvFree(iSck.TxPk);
+                        iSck.TxPk=0;
+                        iGP.packet_count++;
+                        output_bit(PIN_C2, 0);
+                        //output_bit(PIN_C1, 0);
+                    }
+#endif
+                     /*//----------------------------
                      set_adc_channel(iGP.AdChl+7);
                      delay_us(20);
                      iGP.AdChl++;
                      if(iGP.AdChl>1)
                         iGP.AdChl=0;
-                     read_adc(ADC_START_ONLY);
+                     read_adc(ADC_START_ONLY);// */
                   }
                   break;// */
                }
@@ -666,7 +752,7 @@ void main(void)
       }
       restart_wdt();
       //======================================================================== Driver Hw Outputs
-      if(true)
+      /*if(false)
       {
          pIOs=&iGP.IOs[0];
          for(Tmp8=0;Tmp8<IOs_Count;Tmp8++)    //escribe todas las salidas
@@ -692,7 +778,7 @@ void main(void)
             }
             pIOs++;
          }
-      }
+      }// */
       //======================================================================== Driver Hw Outputs
    }
 }
@@ -739,6 +825,114 @@ void SetOutput(unsigned char Out,unsigned char value)
    if(Out==15)output_bit(GPIO15,value);
 }
 
+void sensors(void)
+{
+   uint16_t Tmp16=0;
+   ADCON2.ADFM=1;
+   //----------- bateria -----------------
+   ADCON0.ADON=0;
+   ADCON1.VCFG0=1;   // 1 set diode reference
+   delay_us(1);
+   ADCON0.ADON=1;
+   delay_us(1);
+   ADCON0.CHS=1;
+   delay_us(1);
+   ADCON0.GO=1;
+   while(ADCON0.GO!=0)
+      delay_us(1);
+   iGP.battery = ADRESH<<8;
+   iGP.battery |= ADRESL;
+   if(iGP.battery>=625)
+   {
+      iGP.battery-=625; //->2400mv
+      Tmp16=39*iGP.battery;
+      iGP.battery+=(Tmp16/10);
+      Tmp16=(1*iGP.battery);
+      iGP.battery+=(Tmp16/100);
+      iGP.battery+=2400;//mv
+   }
+   else
+      iGP.battery=0;// */
+   //----------- LUZ 1 -----------------
+   ADCON0.ADON=0;
+   ADCON1.VCFG0=0;   // 0 set vdd reference
+   delay_us(1);
+   ADCON0.ADON=1;
+   delay_us(1);
+   ADCON0.CHS=0;
+   delay_us(1);
+   ADCON0.GO=1;
+   while(ADCON0.GO!=0)
+      delay_us(1);
+   Tmp16 = ADRESH<<8;
+   Tmp16 |= ADRESL;
+   Tmp16 >>= 1;
+   //iGP.luz_am = Tmp16;
+   iGP.luz_am = 512;
+   iGP.luz_am -= Tmp16;
+   iGP.luz_am *= 100;
+   iGP.luz_am /= 512;
+   //----------- Ground HR -----------------
+   ADCON0.ADON=0;
+   ADCON1.VCFG0=0;   // 0 set vdd reference
+   delay_us(1);
+   ADCON0.ADON=1;
+   delay_us(1);
+   ADCON0.CHS=2;
+   delay_us(1);
+   ADCON0.GO=1;
+   while(ADCON0.GO!=0)
+      delay_us(1);
+   iGP.hr_gnd = ADRESH<<8;
+   iGP.hr_gnd |= ADRESL;
+   if(iGP.hr_gnd<900)
+   {
+      iGP.hr_gnd = 900 - iGP.hr_gnd;
+      if(iGP.hr_gnd<460)
+      {
+         iGP.hr_gnd*=100;
+         iGP.hr_gnd/=46;
+      }
+      else
+         iGP.hr_gnd=1000;
+   }
+   else
+      iGP.hr_gnd=0;
+   //----------- Lus UV -----------------
+   ADCON0.ADON=0;
+   ADCON1.VCFG0=0;   // 0 set vdd reference
+   delay_us(1);
+   ADCON0.ADON=1;
+   delay_us(1);
+   ADCON0.CHS=10;
+   delay_us(1);
+   ADCON0.GO=1;
+   while(ADCON0.GO!=0)
+      delay_us(1);
+   Tmp16 = ADRESH<<8;
+   Tmp16 |= ADRESL;
+   Tmp16 >>= 1;
+   iGP.luz_uv = Tmp16;
+   //iGP.luz_am = 512; iGP.luz_am -= Tmp16;
+   iGP.luz_uv *= 100;
+   iGP.luz_uv /= 512;
+   //----------- Monoxido -----------------
+   ADCON0.ADON=0;
+   ADCON1.VCFG0=0;   // 0 set vdd reference
+   delay_us(1);
+   ADCON0.ADON=1;
+   delay_us(1);
+   ADCON0.CHS=8;
+   delay_us(1);
+   ADCON0.GO=1;
+   while(ADCON0.GO!=0)
+      delay_us(1);
+   Tmp16 = ADRESH<<8;
+   Tmp16 |= ADRESL;
+   mq7.monoxido = Tmp16;
+   //-------------------------------------
+   ADCON2.ADFM=0;
+}
 #if(DgvTask!=0)
 int8 InstTask(unsigned char Task)
 {
@@ -773,4 +967,6 @@ int8 InstTask(unsigned char Task)
 //=============================================================================
 #include "radioPinFunctions.c"
 #include "nrf24.c"
+#include "dht11.c"
+#include "bmp280.c"
 

@@ -33,7 +33,7 @@
 6,0,
 8,0,
 #if(nrf_mode==nrf_tx_mode)
-10,Task52,
+10,0,//Task57,  //Task52
 #endif
 12,0}//Task53
 
@@ -42,7 +42,7 @@
 
 #ROM int8 (getenv("EEPROM_ADDRESS")+LsEventos) ={
 CMD_RUN_2TSK,196,255,//Task58
-CMD_SEND_Tsk,1,Task58,//Task57
+CMD_SEND_Tsk,3,Task52,//Task57
 CMD_WRAM,128,127,
 CMD_WRAM,128,0,
 CMD_Dom_OmOff,128,255,

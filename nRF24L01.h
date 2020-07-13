@@ -149,7 +149,12 @@ int1 mask_rx_dr;
 #define R_RX_PL_WID   0x60
 #define NOP           0xFF
 
+typedef struct{
+uint8_t transmited;
+uint8_t retransmit;
+}NrfLink_t;
+
 #define nrf_tx_mode 1
 #define nrf_rx_mode 2
-#define nrf_mode nrf_rx_mode
+#define nrf_mode nrf_tx_mode
 #endif
