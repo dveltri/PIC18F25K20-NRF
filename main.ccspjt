@@ -35,7 +35,7 @@ AdditionalOptionString=
 
 [Opened Files]
 1=main.c
-2=bmp280.c
+2=
 3=bmp280.h
 4=
 5=DgvH.h
