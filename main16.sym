@@ -1,0 +1,159 @@
+004-005 @READ_PROGRAM_MEMORY8.P1
+004-005 @WRITE_PROGRAM_MEMORY8.P2
+004-005 @READ_PACKED_MEMORY.P3
+004-005 @WRITE_PACKED_MEMORY.P4
+006-007 @READ_PACKED_MEMORY.P1
+006-007 @WRITE_PACKED_MEMORY.P2
+020     @INTERRUPT_AREA
+021     @INTERRUPT_AREA
+022     @INTERRUPT_AREA
+023     @INTERRUPT_AREA
+024     @INTERRUPT_AREA
+025     rs232_errors
+026     ANSELA
+027     crx_timeout
+028-029 rx_timeout
+02A-02B pwm_cycle
+02C-02D pwm_servo
+02E-02F pwm_motor
+030-031 pwm_motor_tmp
+032     direction
+033     inv_direction
+034     cmd
+035     rx_byte
+036     rx_byte2
+037-038 MAIN.bateria
+039-03A MAIN.lst_bateria
+03B     MAIN.temp
+03C-03D MAIN.count
+03E     @delay_ms1.P1
+03E-03F @PRINTF_LU_115200_111_109.P2
+03E-03F control.tempu16
+03E     MAIN.@SCRATCH1
+040     @DIV88.P1
+040-041 @DIV1616.P2
+040-041 @MUL1616.P3
+040     @PRINTF_LU_115200_111_109.@SCRATCH1
+040     control.@SCRATCH1
+041     @DIV88.P1
+041     @PRINTF_LU_115200_111_109.@SCRATCH2
+042-043 @MUL1616.P1
+042-043 @DIV1616.P2
+042     @PRINTF_LU_115200_111_109.@SCRATCH3
+042     @DIV88.@SCRATCH1
+043     @PRINTF_LU_115200_111_109.@SCRATCH4
+044     @PRINTF_LU_115200_111_109.@SCRATCH5
+044     @MUL1616.@SCRATCH1
+044     @DIV1616.@SCRATCH1
+045     @PRINTF_LU_115200_111_109.@SCRATCH6
+046     @PRINTF_LU_115200_111_109.@SCRATCH7
+047     Tmr0_fnc.@SCRATCH1
+048     set_motor1.direc
+048     set_motor2.direc
+077     @SCRATCH
+078     @SCRATCH
+078     _RETURN_
+079     @SCRATCH
+07A     @SCRATCH
+07F     @INTERRUPT_AREA
+09E     ADCON1
+0FF     @INTERRUPT_AREA
+111.6   C1OUT
+113.6   C2OUT
+17F     @INTERRUPT_AREA
+18C     ANSEL
+191-192 @WRITE_PROGRAM_MEMORY8.P1
+191-192 @READ_PROGRAM_MEMORY8.P2
+1FF     @INTERRUPT_AREA
+27F     @INTERRUPT_AREA
+291     CCP_1
+291     CCP_1_LOW
+292     CCP_1_HIGH
+298     CCP_2
+298     CCP_2_LOW
+299     CCP_2_HIGH
+2FF     @INTERRUPT_AREA
+311     CCP_3
+311     CCP_3_LOW
+312     CCP_3_HIGH
+318     CCP_4_LOW
+318     CCP_4
+319     CCP_4_HIGH
+37F     @INTERRUPT_AREA
+39C.0   MDBIT
+39C.3   MDOUT
+3FF     @INTERRUPT_AREA
+47F     @INTERRUPT_AREA
+4FF     @INTERRUPT_AREA
+57F     @INTERRUPT_AREA
+5FF     @INTERRUPT_AREA
+67F     @INTERRUPT_AREA
+6FF     @INTERRUPT_AREA
+77F     @INTERRUPT_AREA
+7FF     @INTERRUPT_AREA
+87F     @INTERRUPT_AREA
+8FF     @INTERRUPT_AREA
+97F     @INTERRUPT_AREA
+9FF     @INTERRUPT_AREA
+A7F     @INTERRUPT_AREA
+AFF     @INTERRUPT_AREA
+B7F     @INTERRUPT_AREA
+BFF     @INTERRUPT_AREA
+C7F     @INTERRUPT_AREA
+CFF     @INTERRUPT_AREA
+D7F     @INTERRUPT_AREA
+DFF     @INTERRUPT_AREA
+E7F     @INTERRUPT_AREA
+EFF     @INTERRUPT_AREA
+F7F     @INTERRUPT_AREA
+FFF     @INTERRUPT_AREA
+
+ROM Allocation:
+00001E  off_motor
+000030  set_motor2
+000051  Tmr0_fnc
+00009D  set_motor1
+0000DF  @delay_ms1
+0000F4  @GETCH_BIU_1
+000105  @MUL1616
+00011A  @DIV1616
+00013F  control
+00022E  @DIV88
+00028E  @PRINTF_LU_115200_111_109
+0002ED  MAIN
+0002ED  @cinit1
+000317  @cinit2
+
+Project Directory:
+    E:\Dropbox\IngAv\AutoRf_pic16f1829\
+
+Project Files:
+    main16.c                                                [01-feb-21 15:41  CRC=8631D092]
+    main16.h                                                [31-ene-21 15:00  CRC=99D6160C]
+    C:\Program Files (x86)\PICC\Devices\16F1829.h           [12-nov-13 14:35  CRC=344206AA]
+
+Source signature=888BF3F2
+
+Units:
+    main16 (main)
+
+Compiler Settings:
+    Processor:      PIC16F1829
+    Pointer Size:   16
+    ADC Range:      0-255
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+    Enhanced 16:    Yes
+
+Output Files:
+    XREF file:   main16.xsym
+    Errors:      main16.err
+    Ext Symbols: main16.esym
+    INHX8:       main16.hex
+    Symbols:     main16.sym
+    List:        main16.lst
+    Debug/COFF:  main16.cof
+    Project:     main16.ccspjt
+    Call Tree:   main16.tre
+    Statistics:  main16.STA

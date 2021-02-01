@@ -50,7 +50,8 @@ AdditionalOptionString=
 Link=0
 14=bmp280.h
 15=mq7.h
-16=
+16=C:\Program Files (x86)\PICC\Devices\16F1829.h
+17=
 [ExtraIncludes]
 Count=1
 1=main=e:\dropbox\ingav\pic18f25k20-nrf\dht11.c

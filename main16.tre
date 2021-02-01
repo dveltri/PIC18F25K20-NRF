@@ -1,0 +1,24 @@
+ÀÄmain16
+   ÃÄMAIN  0/184  Ram=1
+   ³  ÃÄ@cinit1  (Inline)  Ram=0
+   ³  ÃÄoff_motor  0/18  Ram=0
+   ³  ÃÄ@delay_ms1  0/21  Ram=1
+   ³  ÃÄ@delay_ms1  0/21  Ram=1
+   ³  ÃÄcontrol  0/335  Ram=3
+   ³  ³  ÃÄ@GETCH_BIU_1  0/17  Ram=0
+   ³  ³  ÃÄ@GETCH_BIU_1  0/17  Ram=0
+   ³  ³  ÃÄ@MUL1616  0/21  Ram=5
+   ³  ³  ÃÄ@MUL1616  0/21  Ram=5
+   ³  ³  ÃÄ@DIV1616  0/37  Ram=5
+   ³  ³  ÃÄ@GETCH_BIU_1  0/17  Ram=0
+   ³  ³  ÃÄ@DIV88  (Inline)  Ram=3
+   ³  ³  ÃÄ@MUL1616  0/21  Ram=5
+   ³  ³  ÃÄ@MUL1616  0/21  Ram=5
+   ³  ³  ÀÄ@DIV1616  0/37  Ram=5
+   ³  ÀÄ@PRINTF_LU_115200_111_109  0/95  Ram=9
+   ÀÄTmr0_fnc  0/142  Ram=1
+      ÃÄoff_motor  0/18  Ram=0
+      ÃÄoff_motor  0/18  Ram=0
+      ÃÄset_motor1  (Inline)  Ram=1
+      ÃÄset_motor2  0/33  Ram=1
+      ÀÄset_motor2  0/33  Ram=1

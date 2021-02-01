@@ -5,16 +5,16 @@
 #define uint16_t unsigned int16
 //------------------------------------------------------------------------------
 //#FUSES RC
-#FUSES INTRC                    //Internal RC Osc
+//dgv#FUSES INTRC                    //Internal RC Osc
 //#FUSES NOPLLEN                //No pll enable
 #FUSES NOMCLR
-#FUSES WDT2048                //Watch Dog Timer uses Postscale
+//dgv#FUSES WDT2048                //Watch Dog Timer uses Postscale
 //#FUSES WDT1
 //#FUSES NOWDT                  //No Watch Dog Timer
 //#FUSES INTRC_IO               //Internal RC Osc
-#FUSES BORV22                   //Brownout reset at 2.2V
+//dgv#FUSES BORV22                   //Brownout reset at 2.2V
 //#FUSES NOBROWNOUT
-#FUSES NOPBADEN                 //PORTB pins are configured as digital I/O on RESET
+//dgv#FUSES NOPBADEN                 //PORTB pins are configured as digital I/O on RESET
 #FUSES NOLVP                    //No low voltage prgming, B3(PIC16) or B5(PIC18) used for I/O
 //#FUSES NOXINST                //Extended set extension and Indexed Addressing mode disabled (Legacy mode)
 #FUSES PUT                      //Power Up Timer
@@ -22,8 +22,8 @@
 #FUSES PROTECT
 //#FUSES CPB
 #FUSES NOCPD
-#FUSES PBADEN
-#PRIORITY  INT_EXT, INT_TIMER1, INT_TIMER3, INT_RDA, INT_AD
+//dgv#FUSES PBADEN
+//dgv#PRIORITY  INT_EXT, INT_TIMER1, INT_TIMER3, INT_RDA, INT_AD
 //------------------------------------------------------------------------------
 #DEVICE ADC=10
 //------------------------------------------------------------------------------
@@ -274,11 +274,11 @@ struct{
 #define SPI_CLK   PIN_A7
 //------------------------------------------------------------------------------
 //#DEVICE ICD=TRUE
-//#use delay(internal=16M)
-#use delay(internal=64M)
+#use delay(internal=16M)
+//#use delay(internal=64M)
 #if((PCB&6)==6)
 //, ENABLE=RF24_CE, ENABLE_ACTIVE=1
-#use spi(MASTER, FORCE_SW, DO=SPI_MOSI, DI=SPI_MISO, CLK=SPI_CLK, mode=0, baud=100000, BITS=8, MSB_FIRST, SAMPLE_RISE, stream=RF24_SPI)
+//dgv#use spi(MASTER, FORCE_SW, DO=SPI_MOSI, DI=SPI_MISO, CLK=SPI_CLK, mode=0, baud=100000, BITS=8, MSB_FIRST, SAMPLE_RISE, stream=RF24_SPI)
 #define lnk1 RF24_SPI
 #else
 #use rs232(baud=115200,parity=N,stop=1,xmit=TX1,rcv=RX1,ERRORS,bits=8,stream=lnk1)

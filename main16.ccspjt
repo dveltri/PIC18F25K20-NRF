@@ -1,0 +1,24 @@
+[PROJECT]
+Target=main16.hex
+Processor_Text=PIC16F1829
+CCSVerions=5.015
+Compiler=PCM
+CCSVersion=5.015
+[Target Data]
+FileList=main16.c
+[Directories]
+Include=C:\Program Files (x86)\PICC\Devices\;C:\Program Files (x86)\PICC\Drivers\
+[E:\Dropbox\IngAv\pic16f1829_nrf\main16]
+Type=4
+[mru-list]
+1=main16.c
+[Opened Files]
+1=main16.h
+2=C:\Program Files (x86)\PICC\Devices\16F1829.h
+3=main16.c
+4=
+[main16.c]
+Type=4
+[Units]
+Count=1
+1=main16 (main)

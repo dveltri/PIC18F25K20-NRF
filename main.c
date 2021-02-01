@@ -1,6 +1,6 @@
 //#include <18F14K22.h>
-#include <18F25K20.h>
-
+//#include <18F25K20.h>
+#include <16F1829.h>
 /*
 1  LED FET1
 2  cs.bmp
@@ -192,6 +192,13 @@ void main(void)
       //ANSEL  = 0x0F;
       //ANSELH = 0x01;
       //port_b_pullups(TRUE);
+   }
+   while(True)
+   {
+      output_bit(PIN_A5, 1);
+      delay_ms(500);
+      output_bit(PIN_A5, 0);
+      delay_ms(500);
    }
    //--------------------------------------------------------------------------- Clear and SetUp HW
    if(True)
