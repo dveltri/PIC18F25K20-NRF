@@ -30,36 +30,23 @@
 
 #define LOGf(x,y) fprintf(lnk1,x,y)                  
 #define LOG(x) fputs (x, lnk1)
-
 #define LOGchr(x) fputc(x, lnk1)
 
 struct{
-              
     unsigned char ANSA0:1;
-
     unsigned char ANSA1:1;
-
     unsigned char ANSA2:1;
-
     unsigned char ANSELA_3:1;
-
     unsigned char ANSA4:1;
-
 }ANSELA;
+#locate ANSELA  = 0x18C
 
-#locate ANSEL  = 0x18C
 struct{
-
     unsigned char ADPREF:2;
-
     unsigned char ADNREF:1;
-
     unsigned char ADCON1_3:1;
-
     unsigned char ADCS:3;
     unsigned char ADFM:1;
 }ADCON1;
-
 #locate ADCON1 = 0x09E
-
 

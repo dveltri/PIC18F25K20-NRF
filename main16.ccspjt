@@ -22,3 +22,9 @@ Type=4
 [Units]
 Count=1
 1=main16 (main)
+[Documentation]
+1=E:\Dropbox\IngAv\AutoRf_pic16f1829\main16 Notes.txt
+1T=main16 Notes.txt
+1E=
+1W=0
+Count=1
